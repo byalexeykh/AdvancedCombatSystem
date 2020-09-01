@@ -2,6 +2,9 @@ package com.byalexeykh.advancedcombatsystem;
 
 
 import io.netty.util.internal.ThreadLocalRandom;
+import net.minecraft.block.Block;
+import net.minecraft.block.LeavesBlock;
+import net.minecraft.block.TallGrassBlock;
 import net.minecraft.enchantment.EnchantmentHelper;
 import net.minecraft.entity.CreatureAttribute;
 import net.minecraft.entity.Entity;
@@ -11,16 +14,27 @@ import net.minecraft.entity.ai.attributes.AttributeMap;
 import net.minecraft.entity.ai.attributes.IAttributeInstance;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.entity.projectile.ProjectileHelper;
+import net.minecraft.inventory.EquipmentSlotType;
+import net.minecraft.item.HoeItem;
 import net.minecraft.item.ItemStack;
+import net.minecraft.item.SwordItem;
+import net.minecraft.particles.ParticleTypes;
 import net.minecraft.util.DamageSource;
+import net.minecraft.util.Hand;
+import net.minecraft.util.SoundEvents;
 import net.minecraft.util.math.*;
 import net.minecraft.world.World;
+import net.minecraft.world.server.ServerWorld;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
+
 import java.util.UUID;
 import java.util.function.Predicate;
 
 public class AdvancedCombatSystem
 {
     public static final String MODID = "advancedcombatsystem";
+    private static Logger LOGGER = LogManager.getLogger();
 
     // Attribute modifiers UUID's
     public static final UUID MOVEMENT_SPEED_REDUCE_UUID = MathHelper.getRandomUUID(ThreadLocalRandom.current());
@@ -32,6 +46,10 @@ public class AdvancedCombatSystem
         float BackswingProgress;
         float basicDamage;
         float currentDamage;
+        float jumpModifier = 1.3f;
+        float sprintModifier = 1.5f;
+        boolean isJumping = player.fallDistance > 0.0F && !player.onGround && !player.isOnLadder() && !player.isInWater();
+        boolean isSprinting = player.isSprinting();
         AttributeMap attributeMap;
         IAttributeInstance attributeInstance;
 
@@ -46,14 +64,21 @@ public class AdvancedCombatSystem
         BackswingProgress = ticksSinceLMBPressed / MaxBackswingTicks;
 
         currentDamage = basicDamage * BackswingProgress;
-        f1 = f1 * BackswingProgress; // TODO calculate damage considering enchantments on item
+        f1 *= BackswingProgress; // TODO calculate damage considering enchantments on item
+        if(isJumping){
+            currentDamage = /*TODO add jumpModifier to item attributes*/ currentDamage * jumpModifier;
+        }
+        if(isSprinting){
+            currentDamage = /*TODO add sprintModifier to item attributes*/ currentDamage * sprintModifier;
+        }
 
+        System.out.println("Current damage = " + currentDamage);
         return currentDamage;
     }
 
     public static void swing(World world, PlayerEntity player, ItemStack itemToHitWith, float ticksSinceLMBPressed){
-        float angle = 50; // Yaw //TODO make this value editable, most likely add new attribute "angle" to items
-        float range = 7; // TODO make this value editable, most likely add new attribute "range" to items
+        float angle = 50; // Yaw //TODO add angle to item attributes
+        float range = 7; // TODO add range to item attributes
         int traceQuality = 9; // number of trace attempts. The higher the quality, the denser the trace
         float deltaAngle = angle / (traceQuality - 1);
         Vec3d playerPos = new Vec3d(player.getPositionVec().x, player.getPositionVec().y + player.getEyeHeight(), player.getPositionVec().z);
@@ -100,20 +125,20 @@ public class AdvancedCombatSystem
                         calculateDamage(ticksSinceLMBPressed, itemToHitWith, player, entityTrace.getEntity())
                 );
             }
-            switch (traceResult.getType()){
-                case BLOCK:
-                    BlockRayTraceResult blockTrace = (BlockRayTraceResult)traceResult;
-                    //world.setBlockState(blockTrace.getPos(), BlockState.)
-                    //System.out.println("[ACS] Found block! : " + blockTrace.getType() + "at " + vectorsToTrace[i]);
-                    // TODO play particles on that block
-                    // TODO play sound of this block
-                    // TODO play swing sound
-                    break;
-                case MISS:
-                    //System.out.println("[ACS] Miss!");
-                    // TODO play swing sound
-                    break;
+            if (traceResult.getType() == RayTraceResult.Type.BLOCK){
+                BlockRayTraceResult blockTrace = (BlockRayTraceResult)traceResult;
+                Block hittedBlock = world.getBlockState(blockTrace.getPos()).getBlock();
+                if(itemToHitWith.getItem() instanceof SwordItem || itemToHitWith.getItem() instanceof HoeItem){
+                    if(hittedBlock instanceof LeavesBlock || hittedBlock instanceof TallGrassBlock){
+                        world.destroyBlock(blockTrace.getPos(), false);
+                    }
+                }
+                // TODO play particles on that block (partially done)
+                // TODO play sound of this block (partially done)
             }
+            player.world.playSound(null, player.getPosX(), player.getPosY(), player.getPosZ(), SoundEvents.ENTITY_PLAYER_ATTACK_SWEEP, player.getSoundCategory(), 1.0F, 1.0F);
+            player.spawnSweepParticles();
+            ((ServerWorld)world).spawnParticle(ParticleTypes.SWEEP_ATTACK, vectorsToTrace[traceQuality] + d0, this.getPosYHeight(0.5D), this.getPosZ() + d1, 0, d0, 0.0D, d1, 0.0D);
         }
     }
 

@@ -30,7 +30,7 @@ public class ACSInputHandler {
     private static float ticksCanComboInit = 10, ticksCanComboCurrent = 0, ticksCanCombo = ticksCanComboInit;
     private static float comboComplicationDelta = 0.2f, comboTimerInit = 100, comboTimerCurrent = 0;
     private static float dashTimerInit = 200, dashTimerCurrent = 0;
-    private static byte comboNum = 0;
+    private static byte comboNum = 0, combosAvailable = 4; //TODO add combosAvailable to item attributes
     private static Minecraft mc;
 
     public ACSInputHandler(){
@@ -64,7 +64,7 @@ public class ACSInputHandler {
                 isMouseLeftKeyPressed = true;
                 if(ticksLMBPressed < AdvancedCombatSystem.MaxBackswingTicks) {
                     RayTraceResult TraceResult = mc.objectMouseOver;
-                    if(TraceResult.getType() == RayTraceResult.Type.ENTITY || TraceResult.getType() == RayTraceResult.Type.MISS || mc.player.getHeldItem(Hand.MAIN_HAND).getItem() instanceof SwordItem){
+                    if(TraceResult.getType() != RayTraceResult.Type.BLOCK || mc.player.getHeldItem(Hand.MAIN_HAND).getItem() instanceof SwordItem){
                         isAccumulatingPower = true;
                     }
                     ticksLMBPressed++;
@@ -119,14 +119,24 @@ public class ACSInputHandler {
                 if(isComboAvailable){
                     ticksCanComboCurrent = 0;
                     ticksLMBPressed = 0;
-                    comboTimerCurrent = 0;
-                    isComboRuined = false;
-                    isComboAvailable = false;
                     comboNum++;
-                    isComboInProgress = true;
-                    ticksCanCombo = ticksCanComboInit / (comboComplicationDelta * comboNum);
-                    LOGGER.warn("Combo passed! new combo window: " + ticksCanCombo);
-                    ACSGuiHandler.drawComboPassedIndicator = true;
+                    if(comboNum > combosAvailable){
+                        comboTimerCurrent = 0;
+                        comboNum = 0;
+                        isComboRuined = true;
+                        isComboAvailable = false;
+                        isComboInProgress = false;
+                        ticksCanCombo = ticksCanComboInit;
+                        LOGGER.warn("Maximum combo reached!");
+                    }else{
+                        comboTimerCurrent = 0;
+                        isComboRuined = false;
+                        isComboAvailable = false;
+                        isComboInProgress = true;
+                        ticksCanCombo = ticksCanComboInit / (comboComplicationDelta * comboNum);
+                        LOGGER.warn("Combo passed! new combo window: " + ticksCanCombo);
+                        ACSGuiHandler.drawComboPassedIndicator = true;
+                    }
                 }
                 else{
                     ACSGuiHandler.drawComboPassedIndicator = false;
@@ -151,7 +161,7 @@ public class ACSInputHandler {
                     ticksCanComboCurrent = 0;
                 }
             }
-            if(isComboInProgress){
+            if(isComboInProgress && !isAccumulatingPower){
                 comboTimerCurrent++;
             }
             if(comboTimerCurrent >= comboTimerInit){
