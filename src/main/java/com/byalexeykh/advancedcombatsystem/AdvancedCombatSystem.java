@@ -65,14 +65,29 @@ public class AdvancedCombatSystem
 
         currentDamage = basicDamage * BackswingProgress;
         f1 *= BackswingProgress; // TODO calculate damage considering enchantments on item
+        LOGGER.warn("f1 value: " + f1);
         if(isJumping){
             currentDamage = /*TODO add jumpModifier to item attributes*/ currentDamage * jumpModifier;
+            ((ServerWorld)targetEntity.getEntityWorld()).spawnParticle( // TODO add new particles for jump and sprint crits
+                    ParticleTypes.CRIT,
+                    targetEntity.getPosX(),
+                    targetEntity.getPosYEye(),
+                    targetEntity.getPosZ(),
+                    5, 0,0, 0,0.3);
+            player.world.playSound(null, player.getPosX(), player.getPosY(), player.getPosZ(), SoundEvents.ENTITY_PLAYER_ATTACK_CRIT, player.getSoundCategory(), 1.0F, 1.0F);
         }
         if(isSprinting){
             currentDamage = /*TODO add sprintModifier to item attributes*/ currentDamage * sprintModifier;
+            ((ServerWorld)targetEntity.getEntityWorld()).spawnParticle( // TODO add new particles for jump and sprint crits
+                    ParticleTypes.CRIT,
+                    targetEntity.getPosX(),
+                    targetEntity.getPosYEye(),
+                    targetEntity.getPosZ(),
+                    8, 0,0, 0,0.4);
+            player.world.playSound(null, player.getPosX(), player.getPosY(), player.getPosZ(), SoundEvents.ENTITY_PLAYER_ATTACK_CRIT, player.getSoundCategory(), 1.0F, 1.0F);
         }
 
-        System.out.println("Current damage = " + currentDamage);
+        LOGGER.warn("Current damage: " + currentDamage);
         return currentDamage;
     }
 
@@ -138,7 +153,6 @@ public class AdvancedCombatSystem
             }
             player.world.playSound(null, player.getPosX(), player.getPosY(), player.getPosZ(), SoundEvents.ENTITY_PLAYER_ATTACK_SWEEP, player.getSoundCategory(), 1.0F, 1.0F);
             player.spawnSweepParticles();
-            ((ServerWorld)world).spawnParticle(ParticleTypes.SWEEP_ATTACK, vectorsToTrace[traceQuality] + d0, this.getPosYHeight(0.5D), this.getPosZ() + d1, 0, d0, 0.0D, d1, 0.0D);
         }
     }
 
