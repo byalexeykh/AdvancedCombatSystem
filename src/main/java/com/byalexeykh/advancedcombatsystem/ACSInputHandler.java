@@ -51,6 +51,14 @@ public class ACSInputHandler {
     }
 
     @SubscribeEvent
+    public void onPlayerScroll(InputEvent.MouseScrollEvent event){
+        isAccumulatingPower = false;
+        isComboRuined = true;
+        comboTimerCurrent = 0;
+        ticksLMBPressed = 0;
+    }
+
+    @SubscribeEvent
     public void onPlayerTick(TickEvent.PlayerTickEvent event){
         if(event.phase == TickEvent.Phase.START && event.player.world.isRemote) {
             if (isAccumulatingPower) {
@@ -58,7 +66,6 @@ public class ACSInputHandler {
             }
             mc.gameSettings.attackIndicator = AttackIndicatorStatus.OFF;
         }else{
-
             // while LMB down ==========================================================================================
             if(mc.gameSettings.keyBindAttack.isKeyDown()){
                 isMouseLeftKeyPressed = true;
@@ -85,7 +92,6 @@ public class ACSInputHandler {
             else{
                 isMouseLeftKeyPressed = false;
             }
-            //==========================================================================================================
 
             // on LMB up ===============================================================================================
             if (!isMouseLeftKeyPressed && MouseLeftKeyLastValue) {
@@ -149,9 +155,8 @@ public class ACSInputHandler {
                 }
                 // =====================================================================================================
             }
-            //==========================================================================================================
 
-            // Combo timers
+            // Combo timers ============================================================================================
             if(isComboRuined){
                 if(ticksLMBPressed > 0) { ticksLMBPressed -= 2; }
                 if(ticksCanComboCurrent > 0) { ticksCanComboCurrent--; }
@@ -195,9 +200,9 @@ public class ACSInputHandler {
             }else{
                 dashTimerCurrent--;
             }
-            // =========================================================================================================
         }
     }
+
 
     public static float getTicksLMBPressed(){
         return ticksLMBPressed;
