@@ -19,6 +19,7 @@ public class ACSGuiHandler extends AbstractGui {
     private final int bar_width = 18, bar_height = 7;
     private float timersDefaultValue = 35, drawComboPassedIndicatorTimer = 0, drawComboRuinedTimer = 0;
     public static boolean drawComboIndicator = false, drawComboPassedIndicator = false, drawComboRuined = false;
+    private static boolean isBackswingIndicatorDrawed = false;
 
     @SubscribeEvent
     public void renderOverlay(RenderGameOverlayEvent event){
@@ -44,21 +45,25 @@ public class ACSGuiHandler extends AbstractGui {
             // Draw backswing indicator ================================================================================
             if(mc.player.getHeldItem(Hand.MAIN_HAND).getItem() instanceof SwordItem || mc.objectMouseOver.getType() == RayTraceResult.Type.ENTITY || ACSInputHandler.isAccumulatingPower)
             {
-                float progressPercent = ACSInputHandler.getTicksLMBPressed() / AdvancedCombatSystem.MaxBackswingTicks;
+                float progressPercent = ACSInputHandler.getTicksLMBPressed() / ACSInputHandler.neededBackswingTicks;
                 int currentWidth = (int)(bar_width * progressPercent);
+                isBackswingIndicatorDrawed = true;
 
                 blit(x, y, 0, 0, bar_width, bar_height);
                 blit(x, y, 0, bar_height, currentWidth, bar_height);
             }
+            else{
+                isBackswingIndicatorDrawed = false;
+            }
 
             // Combo indicator =========================================================================================
-            if(drawComboIndicator)
+            if(drawComboIndicator && isBackswingIndicatorDrawed)
             {
                 blit(x - 1, y - 1, 18, 6, 37, 14);
             }
 
             // Combo passed indicator ==================================================================================
-            if(drawComboPassedIndicator && drawComboPassedIndicatorTimer > 0)
+            if((drawComboPassedIndicator && drawComboPassedIndicatorTimer > 0) && isBackswingIndicatorDrawed)
             {
                 blit(x + (bar_width / 2 + 4), y - 5, 0, 17, 10, 16);
             }
@@ -69,7 +74,7 @@ public class ACSGuiHandler extends AbstractGui {
             }
 
             // Combo ruined indicator ==================================================================================
-            if(drawComboRuined && drawComboRuinedTimer > 0){
+            if((drawComboRuined && drawComboRuinedTimer > 0) && isBackswingIndicatorDrawed){
                 blit(x + bar_width / 2 - 4, y, 0, 82, 4, 89);
                 drawComboRuinedTimer--;
             }

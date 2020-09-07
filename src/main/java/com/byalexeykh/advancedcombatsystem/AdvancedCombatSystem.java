@@ -10,11 +10,8 @@ import net.minecraft.entity.CreatureAttribute;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.LivingEntity;
 import net.minecraft.entity.SharedMonsterAttributes;
-import net.minecraft.entity.ai.attributes.AttributeMap;
-import net.minecraft.entity.ai.attributes.IAttributeInstance;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.entity.projectile.ProjectileHelper;
-import net.minecraft.inventory.EquipmentSlotType;
 import net.minecraft.item.*;
 import net.minecraft.particles.ParticleTypes;
 import net.minecraft.util.DamageSource;
@@ -39,7 +36,7 @@ public class AdvancedCombatSystem
     // Attribute modifiers UUID's
     public static final UUID MOVEMENT_SPEED_REDUCE_UUID = MathHelper.getRandomUUID(ThreadLocalRandom.current());
 
-    public static final int MaxBackswingTicks = 30;
+    public static final int DefaultBackswingTicks = 30;
 
 
     public static float calculateDamage(float ticksSinceLMBPressed, PlayerEntity player, Entity targetEntity, boolean isJumping, boolean isSprinting){
@@ -57,7 +54,7 @@ public class AdvancedCombatSystem
             f1 = EnchantmentHelper.getModifierForCreature(player.getHeldItemMainhand(), CreatureAttribute.UNDEFINED);
         }
 
-        BackswingProgress = ticksSinceLMBPressed / MaxBackswingTicks;
+        BackswingProgress = ticksSinceLMBPressed / (float) getACSAttributesVanilla(player.getHeldItem(Hand.MAIN_HAND).getItem()).get((3));
 
         currentDamage = basicDamage * BackswingProgress;
         f1 *= BackswingProgress; // TODO calculate damage considering enchantments on item
@@ -74,7 +71,7 @@ public class AdvancedCombatSystem
         }
         if(isSprinting){
             currentDamage = /*TODO add sprintModifier to item attributes*/ currentDamage * sprintModifier;
-            ((ServerWorld)targetEntity.getEntityWorld()).spawnParticle( // TODO add new particles for jump and sprint crits
+            ((ServerWorld)targetEntity.getEntityWorld()).spawnParticle(
                     ParticleTypes.CRIT,
                     targetEntity.getPosX(),
                     targetEntity.getPosYEye(),
@@ -88,9 +85,9 @@ public class AdvancedCombatSystem
     }
 
     public static void swing(World world, PlayerEntity player, ItemStack itemToHitWith, float ticksSinceLMBPressed){
-        float angle = (float)getACSAttributes(itemToHitWith.getItem()).get(0); // Yaw //TODO add angle to item attributes
-        float range = (float)getACSAttributes(itemToHitWith.getItem()).get(1); // TODO add range to item attributes
-        int traceQuality = (int)getACSAttributes(itemToHitWith.getItem()).get(2); // number of trace attempts. The higher the quality, the denser the trace
+        float angle = (float) getACSAttributesVanilla(itemToHitWith.getItem()).get(0); // Yaw //TODO add angle to item attributes
+        float range = (float) getACSAttributesVanilla(itemToHitWith.getItem()).get(1); // TODO add range to item attributes
+        int traceQuality = (int) getACSAttributesVanilla(itemToHitWith.getItem()).get(2); // number of trace attempts. The higher the quality, the denser the trace
         float deltaAngle = angle / (traceQuality - 1);
         boolean isJumping = player.fallDistance > 0.0F && !player.onGround && !player.isOnLadder() && !player.isInWater();
         boolean isSprinting = player.isSprinting();
@@ -101,10 +98,10 @@ public class AdvancedCombatSystem
         CrosshairZenith = player.getPitchYaw().x;
         CrosshairAzimuth = player.getPitchYaw().y;
 
-        LOGGER.warn("Current angle, range, traceQuality, deltaAngle: " + angle + ", " + range  + ", " +  traceQuality  + ", " +  deltaAngle);
+        LOGGER.warn("Current angle = " + angle + ", range = " + range + ", traceQuality = " + traceQuality + ", deltaAngle = " + deltaAngle);
 
         // Checking if the current item is a hand ======================================================================
-        if(!(boolean)getACSAttributes(itemToHitWith.getItem()).get(4)) {
+        if(!(boolean) getACSAttributesVanilla(itemToHitWith.getItem()).get(4)) {
             LOGGER.warn("Not hand!");
             // Calculating starting point from where calculations will began ===============================================
             double startAzimuth = CrosshairAzimuth + (angle / 2);
@@ -138,7 +135,7 @@ public class AdvancedCombatSystem
                             calculateDamage(ticksSinceLMBPressed, player, entityTrace.getEntity(), isJumping, isSprinting)
                     );
                     if (isSprinting) {
-                        entityTrace.getEntity().addVelocity(vectorsToTrace[i].normalize().x, vectorsToTrace[i].normalize().y, vectorsToTrace[i].normalize().z);
+                        entityTrace.getEntity().addVelocity(vectorsToTrace[i].normalize().x * 0.2, vectorsToTrace[i].normalize().y * 0.2, vectorsToTrace[i].normalize().z * 0.2);
                     }
                 }
                 if (traceResult.getType() == RayTraceResult.Type.BLOCK) {
@@ -158,7 +155,7 @@ public class AdvancedCombatSystem
         }
         else{
             LOGGER.warn("Hand!");
-            EntityRayTraceResult entityTrace = ProjectileHelper.rayTraceEntities(player, playerPos, player.getLookVec(), player.getBoundingBox().grow(range * 2, range * 2, range * 2), lef, range);
+            EntityRayTraceResult entityTrace = ProjectileHelper.rayTraceEntities(player, playerPos, player.getLookVec().normalize().add(range, range, range), player.getBoundingBox().grow(range * 2, range * 2, range * 2), lef, range);
             RayTraceResult traceResult = world.rayTraceBlocks(new RayTraceContext(player.getEyePosition(1), player.getLookVec(), RayTraceContext.BlockMode.OUTLINE, RayTraceContext.FluidMode.NONE, player));
             if (entityTrace != null) {
                 entityTrace.getEntity().attackEntityFrom(
@@ -178,61 +175,68 @@ public class AdvancedCombatSystem
 
     /**
      * Used for getting ACS attributes from vanilla items
-     * @return 0 - angle(float) | 1 - range(float) | 2 - traceQuality(int) | 3 - neededBackswingTicks(float) | 4 - isHand(boolean)
+     * @return 0 - angle(float) | 1 - range(float) | 2 - traceQuality(int) | 3 - neededBackswingTicks(float) | 4 - isHand(boolean) | 5 - maxComboNum(int)
      */
-    public static List<Object> getACSAttributes(Item itemToHitWith){
+    public static List<Object> getACSAttributesVanilla(Item itemToHitWith){
         float angle;
         float range;
         float neededBackswingTicks;
         int traceQuality;
+        byte maxComboNum = 0;
         boolean isHand;
         if(itemToHitWith instanceof SwordItem) {
             angle = 50;
             range = 7;
             traceQuality = 9;
             neededBackswingTicks = 30;
+            maxComboNum = 4;
             isHand = false;
-            return Arrays.asList(angle, range, traceQuality, neededBackswingTicks, isHand);
+            return Arrays.asList(angle, range, traceQuality, neededBackswingTicks, isHand, maxComboNum);
         }
         else if(itemToHitWith instanceof HoeItem){
             angle = 40;
             range = 6;
             traceQuality = 7;
             neededBackswingTicks = 50;
+            maxComboNum = 2;
             isHand = false;
-            return Arrays.asList(angle, range, traceQuality, neededBackswingTicks, isHand);
+            return Arrays.asList(angle, range, traceQuality, neededBackswingTicks, isHand, maxComboNum);
         }
         else if(itemToHitWith instanceof AxeItem){
             angle = 40;
             range = 6;
             traceQuality = 7;
             neededBackswingTicks = 70;
+            maxComboNum = 2;
             isHand = false;
-            return Arrays.asList(angle, range, traceQuality, neededBackswingTicks, isHand);
+            return Arrays.asList(angle, range, traceQuality, neededBackswingTicks, isHand, maxComboNum);
         }
         else if(itemToHitWith instanceof ShovelItem){
             angle = 40;
             range = 6;
             traceQuality = 7;
             neededBackswingTicks = 50;
+            maxComboNum = 3;
             isHand = false;
-            return Arrays.asList(angle, range, traceQuality, neededBackswingTicks, isHand);
+            return Arrays.asList(angle, range, traceQuality, neededBackswingTicks, isHand, maxComboNum);
         }
         else if(itemToHitWith instanceof PickaxeItem){
             angle = 30;
             range = 6;
             traceQuality = 5;
             neededBackswingTicks = 60;
+            maxComboNum = 2;
             isHand = false;
-            return Arrays.asList(angle, range, traceQuality, neededBackswingTicks, isHand);
+            return Arrays.asList(angle, range, traceQuality, neededBackswingTicks, isHand, maxComboNum);
         }
         else{
-            angle = 0;
-            range = 0;
-            traceQuality = 0;
-            neededBackswingTicks = 0;
+            angle = 50;
+            range = 6;
+            traceQuality = 9;
+            neededBackswingTicks = 10;
+            maxComboNum = 6;
             isHand = true;
-            return Arrays.asList(angle, range, traceQuality, neededBackswingTicks, isHand);
+            return Arrays.asList(angle, range, traceQuality, neededBackswingTicks, isHand, maxComboNum);
         }
     }
 }

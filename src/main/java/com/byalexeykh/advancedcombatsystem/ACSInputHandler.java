@@ -4,6 +4,7 @@ import com.byalexeykh.advancedcombatsystem.networking.NetworkHandler;
 import com.byalexeykh.advancedcombatsystem.networking.messages.MessageSwing;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.settings.AttackIndicatorStatus;
+import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.item.SwordItem;
 import net.minecraft.util.Hand;
 import net.minecraft.util.math.RayTraceResult;
@@ -11,6 +12,7 @@ import net.minecraft.util.math.Vec3d;
 import net.minecraftforge.client.event.InputEvent;
 import net.minecraftforge.common.MinecraftForge;
 import net.minecraftforge.event.TickEvent;
+import net.minecraftforge.event.entity.EntityJoinWorldEvent;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
 import net.minecraftforge.fml.common.Mod;
 import net.minecraftforge.fml.event.lifecycle.FMLCommonSetupEvent;
@@ -26,11 +28,12 @@ public class ACSInputHandler {
     private static boolean MouseLeftKeyLastValue = true;
     private static boolean isComboAvailable = false, isComboRuined = false, isComboInProgress = false;
     public static boolean isAccumulatingPower = false;
+    public static float neededBackswingTicks = 0;
     private static float ticksLMBPressed = 0;
     private static float ticksCanComboInit = 10, ticksCanComboCurrent = 0, ticksCanCombo = ticksCanComboInit;
     private static float comboComplicationDelta = 0.2f, comboTimerInit = 100, comboTimerCurrent = 0;
     private static float dashTimerInit = 200, dashTimerCurrent = 0;
-    private static byte comboNum = 0, combosAvailable = 4; //TODO add combosAvailable to item attributes
+    private static byte comboNum = 0, combosAvailable = 4;
     private static Minecraft mc;
 
     public ACSInputHandler(){
@@ -45,9 +48,12 @@ public class ACSInputHandler {
     }
 
     @SubscribeEvent
-    public void onBlockHarvesting(InputEvent.ClickInputEvent event){
-        if(isAccumulatingPower || Minecraft.getInstance().player.getHeldItem(Hand.MAIN_HAND).getItem() instanceof SwordItem)
+    public void onLeftClick(InputEvent.ClickInputEvent event){
+        if(isAccumulatingPower || mc.player.getHeldItem(Hand.MAIN_HAND).getItem() instanceof SwordItem || mc.objectMouseOver.getType() == RayTraceResult.Type.ENTITY || mc.objectMouseOver.getType() == RayTraceResult.Type.MISS)
             event.setCanceled(true);
+
+        neededBackswingTicks = (float)AdvancedCombatSystem.getACSAttributesVanilla(mc.player.getHeldItem(Hand.MAIN_HAND).getItem()).get(3);
+        combosAvailable = (byte)AdvancedCombatSystem.getACSAttributesVanilla(mc.player.getHeldItem(Hand.MAIN_HAND).getItem()).get(5);
     }
 
     @SubscribeEvent
@@ -56,6 +62,17 @@ public class ACSInputHandler {
         isComboRuined = true;
         comboTimerCurrent = 0;
         ticksLMBPressed = 0;
+    }
+
+    @SubscribeEvent
+    public void onWorldEntering(EntityJoinWorldEvent event){
+        if(event.getEntity() instanceof PlayerEntity){ // TODO think if there are ways to do it better
+            try {
+                neededBackswingTicks = (float)AdvancedCombatSystem.getACSAttributesVanilla(mc.player.getHeldItem(Hand.MAIN_HAND).getItem()).get(3);
+            }catch (Exception e){
+                LOGGER.error("Error while reading neededBackswingTicks on world enter: " + e);
+            }
+        }
     }
 
     @SubscribeEvent
@@ -69,15 +86,19 @@ public class ACSInputHandler {
             // while LMB down ==========================================================================================
             if(mc.gameSettings.keyBindAttack.isKeyDown()){
                 isMouseLeftKeyPressed = true;
-                if(ticksLMBPressed < AdvancedCombatSystem.MaxBackswingTicks) {
-                    RayTraceResult TraceResult = mc.objectMouseOver;
+                RayTraceResult TraceResult = mc.objectMouseOver;
+
+                if(ticksLMBPressed < neededBackswingTicks) {
                     if(TraceResult.getType() != RayTraceResult.Type.BLOCK || mc.player.getHeldItem(Hand.MAIN_HAND).getItem() instanceof SwordItem){
                         isAccumulatingPower = true;
+                    }
+                    else{
+                        isAccumulatingPower = false;
                     }
                     ticksLMBPressed++;
                 }
 
-                if(ticksLMBPressed == AdvancedCombatSystem.MaxBackswingTicks){
+                if(ticksLMBPressed == neededBackswingTicks){
                     if(ticksCanComboCurrent < ticksCanCombo){
                         isComboAvailable = true;
                         ticksCanComboCurrent++;
@@ -119,7 +140,7 @@ public class ACSInputHandler {
                     MouseLeftKeyLastValue = isMouseLeftKeyPressed;
                     return;
                 }
-                Minecraft.getInstance().player.swingArm(Hand.MAIN_HAND);
+                mc.player.swingArm(Hand.MAIN_HAND);
 
                 // Combo processing ====================================================================================
                 if(isComboAvailable){
@@ -153,7 +174,6 @@ public class ACSInputHandler {
                     comboNum = 0;
                     LOGGER.warn("Combo failed! new combo window: " + ticksCanCombo);
                 }
-                // =====================================================================================================
             }
 
             // Combo timers ============================================================================================
@@ -183,15 +203,16 @@ public class ACSInputHandler {
 
             // Dash handling ===========================================================================================
             if(dashTimerCurrent <= 0){
+                boolean isOnGround = mc.player.onGround && !mc.player.isOnLadder() && !mc.player.isInWater();
                 // Dash to left
-                if(mc.gameSettings.keyBindLeft.isKeyDown() && mc.gameSettings.keyBindSprint.isKeyDown()){
+                if(mc.gameSettings.keyBindLeft.isKeyDown() && mc.gameSettings.keyBindSprint.isKeyDown() && isOnGround){
                     LOGGER.warn("Dash to left");
                     dashTimerCurrent = dashTimerInit;
                     Dash((byte)1, 0.5f);
                     return;
                 }
                 // Dash to right
-                if(mc.gameSettings.keyBindRight.isKeyDown() && mc.gameSettings.keyBindSprint.isKeyDown()){
+                if(mc.gameSettings.keyBindRight.isKeyDown() && mc.gameSettings.keyBindSprint.isKeyDown() && isOnGround){
                     LOGGER.warn("Dash to right");
                     dashTimerCurrent = dashTimerInit;
                     Dash((byte)0, 0.5f);
