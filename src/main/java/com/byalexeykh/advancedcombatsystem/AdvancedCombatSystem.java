@@ -155,7 +155,8 @@ public class AdvancedCombatSystem
         }
         else{
             LOGGER.warn("Hand!");
-            EntityRayTraceResult entityTrace = ProjectileHelper.rayTraceEntities(player, playerPos, player.getLookVec().normalize().add(range, range, range), player.getBoundingBox().grow(range * 2, range * 2, range * 2), lef, range);
+            Vec3d endPos = (player.getLookVec().mul(range, range, range)).add(playerPos);
+            EntityRayTraceResult entityTrace = ProjectileHelper.rayTraceEntities(player, playerPos, endPos, player.getBoundingBox().grow(range * 2, range * 2, range * 2), lef, range);
             RayTraceResult traceResult = world.rayTraceBlocks(new RayTraceContext(player.getEyePosition(1), player.getLookVec(), RayTraceContext.BlockMode.OUTLINE, RayTraceContext.FluidMode.NONE, player));
             if (entityTrace != null) {
                 entityTrace.getEntity().attackEntityFrom(

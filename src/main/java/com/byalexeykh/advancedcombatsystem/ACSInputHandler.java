@@ -28,6 +28,7 @@ public class ACSInputHandler {
     private static boolean MouseLeftKeyLastValue = true;
     private static boolean isComboAvailable = false, isComboRuined = false, isComboInProgress = false;
     public static boolean isAccumulatingPower = false;
+    private static boolean isAimingAtBlock = false, isHoldingSword = false, flag3 = false, flag4 = false;
     public static float neededBackswingTicks = 0;
     private static float ticksLMBPressed = 0;
     private static float ticksCanComboInit = 10, ticksCanComboCurrent = 0, ticksCanCombo = ticksCanComboInit;
@@ -49,9 +50,12 @@ public class ACSInputHandler {
 
     @SubscribeEvent
     public void onLeftClick(InputEvent.ClickInputEvent event){
-        if(isAccumulatingPower || mc.player.getHeldItem(Hand.MAIN_HAND).getItem() instanceof SwordItem || mc.objectMouseOver.getType() == RayTraceResult.Type.ENTITY || mc.objectMouseOver.getType() == RayTraceResult.Type.MISS)
-            event.setCanceled(true);
-
+        RayTraceResult.Type traceType = mc.objectMouseOver.getType();
+        if(isAccumulatingPower || isHoldingSword || traceType == RayTraceResult.Type.ENTITY || traceType == RayTraceResult.Type.MISS){
+            if(event.isAttack()){
+                event.setCanceled(true);
+            }
+        }
         neededBackswingTicks = (float)AdvancedCombatSystem.getACSAttributesVanilla(mc.player.getHeldItem(Hand.MAIN_HAND).getItem()).get(3);
         combosAvailable = (byte)AdvancedCombatSystem.getACSAttributesVanilla(mc.player.getHeldItem(Hand.MAIN_HAND).getItem()).get(5);
     }
@@ -81,21 +85,22 @@ public class ACSInputHandler {
             if (isAccumulatingPower) {
                 event.player.isSwingInProgress = false;
             }
+            isHoldingSword = mc.player.getHeldItem(Hand.MAIN_HAND).getItem() instanceof SwordItem;
+            isAimingAtBlock = mc.objectMouseOver.getType() == RayTraceResult.Type.BLOCK;
             mc.gameSettings.attackIndicator = AttackIndicatorStatus.OFF;
         }else{
             // while LMB down ==========================================================================================
             if(mc.gameSettings.keyBindAttack.isKeyDown()){
                 isMouseLeftKeyPressed = true;
-                RayTraceResult TraceResult = mc.objectMouseOver;
 
                 if(ticksLMBPressed < neededBackswingTicks) {
-                    if(TraceResult.getType() != RayTraceResult.Type.BLOCK || mc.player.getHeldItem(Hand.MAIN_HAND).getItem() instanceof SwordItem){
+                    if(isHoldingSword || !isAimingAtBlock){
                         isAccumulatingPower = true;
+                        ticksLMBPressed++;
                     }
                     else{
                         isAccumulatingPower = false;
                     }
-                    ticksLMBPressed++;
                 }
 
                 if(ticksLMBPressed == neededBackswingTicks){
@@ -116,63 +121,74 @@ public class ACSInputHandler {
 
             // on LMB up ===============================================================================================
             if (!isMouseLeftKeyPressed && MouseLeftKeyLastValue) {
-                LOGGER.warn("=============== LMB UP ===============");
-                isAccumulatingPower = false;
-                ACSGuiHandler.drawComboIndicator = false;
-                MessageSwing msg;
+                // Resetting values if power was accumulated but LMB was up when aiming at block
+                if(isAimingAtBlock && !isHoldingSword){
+                    ticksLMBPressed = 0;
+                    ticksCanCombo = ticksCanComboInit;
+                    comboTimerCurrent = 0;
+                    comboNum = 0;
+                    isComboRuined = true;
+                    isComboAvailable = false;
+                    isComboInProgress = false;
+                    isAccumulatingPower = false;
+                    ACSGuiHandler.drawComboIndicator = false;
+                    LOGGER.warn("Aiming at block with accumulated power!");
+                }
+                else{
+                    isAccumulatingPower = false;
+                    ACSGuiHandler.drawComboIndicator = false;
+                    MessageSwing msg;
+                    if (Minecraft.getInstance().player != null) {
+                        try {
+                            msg = new MessageSwing(mc.player.getHeldItem(Hand.MAIN_HAND), ticksLMBPressed);
+                        } catch (Exception e) {
+                            LOGGER.error("Exception while constructing MessageSwing: " + e);
+                            MouseLeftKeyLastValue = isMouseLeftKeyPressed;
+                            return;
+                        }
+                        MouseLeftKeyLastValue = isMouseLeftKeyPressed;
+                    } else return;
 
-                if(Minecraft.getInstance().player != null){
-                    try{
-                        msg = new MessageSwing(mc.player.getHeldItem(Hand.MAIN_HAND), ticksLMBPressed);
-                    }catch (Exception e){
-                        LOGGER.error("Exception while constructing MessageSwing: " + e);
+                    try {
+                        NetworkHandler.INSTANCE.sendToServer(msg);
+                    } catch (Exception e) {
+                        LOGGER.error("Exception while sending MessageSwing to server: " + e);
                         MouseLeftKeyLastValue = isMouseLeftKeyPressed;
                         return;
                     }
-                    MouseLeftKeyLastValue = isMouseLeftKeyPressed;
-                }
-                else return;
-
-                try{
-                    NetworkHandler.INSTANCE.sendToServer(msg);
-                }catch (Exception e){
-                    LOGGER.error("Exception while sending MessageSwing to server: " + e);
-                    MouseLeftKeyLastValue = isMouseLeftKeyPressed;
-                    return;
-                }
-                mc.player.swingArm(Hand.MAIN_HAND);
-
-                // Combo processing ====================================================================================
-                if(isComboAvailable){
-                    ticksCanComboCurrent = 0;
-                    ticksLMBPressed = 0;
-                    comboNum++;
-                    if(comboNum > combosAvailable){
-                        comboTimerCurrent = 0;
-                        comboNum = 0;
+                    mc.player.swingArm(Hand.MAIN_HAND);
+                    // Combo processing ====================================================================================
+                    if(isComboAvailable){
+                        ticksCanComboCurrent = 0;
+                        ticksLMBPressed = 0;
+                        comboNum++;
+                        if(comboNum > combosAvailable){
+                            comboTimerCurrent = 0;
+                            comboNum = 0;
+                            isComboRuined = true;
+                            isComboAvailable = false;
+                            isComboInProgress = false;
+                            ticksCanCombo = ticksCanComboInit;
+                            LOGGER.warn("Maximum combo reached!");
+                        }else{
+                            comboTimerCurrent = 0;
+                            isComboRuined = false;
+                            isComboAvailable = false;
+                            isComboInProgress = true;
+                            ticksCanCombo = ticksCanComboInit / (comboComplicationDelta * comboNum);
+                            LOGGER.warn("Combo passed! new combo window: " + ticksCanCombo);
+                            ACSGuiHandler.drawComboPassedIndicator = true;
+                        }
+                    }
+                    else{
+                        ACSGuiHandler.drawComboPassedIndicator = false;
+                        ACSGuiHandler.drawComboRuined = true;
                         isComboRuined = true;
-                        isComboAvailable = false;
                         isComboInProgress = false;
                         ticksCanCombo = ticksCanComboInit;
-                        LOGGER.warn("Maximum combo reached!");
-                    }else{
-                        comboTimerCurrent = 0;
-                        isComboRuined = false;
-                        isComboAvailable = false;
-                        isComboInProgress = true;
-                        ticksCanCombo = ticksCanComboInit / (comboComplicationDelta * comboNum);
-                        LOGGER.warn("Combo passed! new combo window: " + ticksCanCombo);
-                        ACSGuiHandler.drawComboPassedIndicator = true;
+                        comboNum = 0;
+                        LOGGER.warn("Combo failed! new combo window: " + ticksCanCombo);
                     }
-                }
-                else{
-                    ACSGuiHandler.drawComboPassedIndicator = false;
-                    ACSGuiHandler.drawComboRuined = true;
-                    isComboRuined = true;
-                    isComboInProgress = false;
-                    ticksCanCombo = ticksCanComboInit;
-                    comboNum = 0;
-                    LOGGER.warn("Combo failed! new combo window: " + ticksCanCombo);
                 }
             }
 
@@ -203,7 +219,13 @@ public class ACSInputHandler {
 
             // Dash handling ===========================================================================================
             if(dashTimerCurrent <= 0){
-                boolean isOnGround = mc.player.onGround && !mc.player.isOnLadder() && !mc.player.isInWater();
+                boolean isOnGround;
+                try{
+                    isOnGround = mc.player.onGround && !mc.player.isOnLadder() && !mc.player.isInWater();
+                }catch (Exception e){
+                    LOGGER.error("Error at dash handling: " + e);
+                    isOnGround = true;
+                }
                 // Dash to left
                 if(mc.gameSettings.keyBindLeft.isKeyDown() && mc.gameSettings.keyBindSprint.isKeyDown() && isOnGround){
                     LOGGER.warn("Dash to left");
