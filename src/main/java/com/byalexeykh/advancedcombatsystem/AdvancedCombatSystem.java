@@ -1,10 +1,6 @@
 package com.byalexeykh.advancedcombatsystem;
 
-
-import io.netty.util.internal.ThreadLocalRandom;
-import net.minecraft.block.Block;
-import net.minecraft.block.LeavesBlock;
-import net.minecraft.block.TallGrassBlock;
+import net.minecraft.block.*;
 import net.minecraft.enchantment.EnchantmentHelper;
 import net.minecraft.entity.CreatureAttribute;
 import net.minecraft.entity.Entity;
@@ -22,22 +18,14 @@ import net.minecraft.world.World;
 import net.minecraft.world.server.ServerWorld;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-
 import java.util.Arrays;
 import java.util.List;
-import java.util.UUID;
 import java.util.function.Predicate;
 
 public class AdvancedCombatSystem
 {
     public static final String MODID = "advancedcombatsystem";
     private static Logger LOGGER = LogManager.getLogger();
-
-    // Attribute modifiers UUID's
-    public static final UUID MOVEMENT_SPEED_REDUCE_UUID = MathHelper.getRandomUUID(ThreadLocalRandom.current());
-
-    public static final int DefaultBackswingTicks = 30;
-
 
     public static float calculateDamage(float ticksSinceLMBPressed, PlayerEntity player, Entity targetEntity, boolean isJumping, boolean isSprinting){
         float BackswingProgress;
@@ -55,10 +43,12 @@ public class AdvancedCombatSystem
         }
 
         BackswingProgress = ticksSinceLMBPressed / (float) getACSAttributesVanilla(player.getHeldItem(Hand.MAIN_HAND).getItem()).get((3));
-
+        LOGGER.warn("BackswingProgress =  " + BackswingProgress);
+        LOGGER.warn("f1 value: " + f1);
         currentDamage = basicDamage * BackswingProgress;
         f1 *= BackswingProgress; // TODO calculate damage considering enchantments on item
-        LOGGER.warn("f1 value: " + f1);
+        currentDamage += f1;
+        LOGGER.warn("f1 end value: " + f1);
         if(isJumping){
             currentDamage = /*TODO add jumpModifier to item attributes*/ currentDamage * jumpModifier;
             ((ServerWorld)targetEntity.getEntityWorld()).spawnParticle(
@@ -85,8 +75,8 @@ public class AdvancedCombatSystem
     }
 
     public static void swing(World world, PlayerEntity player, ItemStack itemToHitWith, float ticksSinceLMBPressed){
-        float angle = (float) getACSAttributesVanilla(itemToHitWith.getItem()).get(0); // Yaw //TODO add angle to item attributes
-        float range = (float) getACSAttributesVanilla(itemToHitWith.getItem()).get(1); // TODO add range to item attributes
+        float angle = (float) getACSAttributesVanilla(itemToHitWith.getItem()).get(0); // Yaw
+        float range = (float) getACSAttributesVanilla(itemToHitWith.getItem()).get(1); //
         int traceQuality = (int) getACSAttributesVanilla(itemToHitWith.getItem()).get(2); // number of trace attempts. The higher the quality, the denser the trace
         float deltaAngle = angle / (traceQuality - 1);
         boolean isJumping = player.fallDistance > 0.0F && !player.onGround && !player.isOnLadder() && !player.isInWater();
@@ -98,9 +88,7 @@ public class AdvancedCombatSystem
         CrosshairZenith = player.getPitchYaw().x;
         CrosshairAzimuth = player.getPitchYaw().y;
 
-        LOGGER.warn("Current angle = " + angle + ", range = " + range + ", traceQuality = " + traceQuality + ", deltaAngle = " + deltaAngle);
-
-        // Checking if the current item is a hand ======================================================================
+        // Checking if current item is a hand ======================================================================
         if(!(boolean) getACSAttributesVanilla(itemToHitWith.getItem()).get(4)) {
             LOGGER.warn("Not hand!");
             // Calculating starting point from where calculations will began ===============================================
@@ -127,31 +115,39 @@ public class AdvancedCombatSystem
                 }
             // Checking what was hit with trace and doing stuff ========================================================
             for (int i = 0; i < traceQuality; i++) {
-                EntityRayTraceResult entityTrace = ProjectileHelper.rayTraceEntities(player, playerPos, vectorsToTrace[i], player.getBoundingBox().grow(range * 2, range * 2, range * 2), lef, range);
-                RayTraceResult traceResult = world.rayTraceBlocks(new RayTraceContext(player.getEyePosition(1), vectorsToTrace[i], RayTraceContext.BlockMode.OUTLINE, RayTraceContext.FluidMode.NONE, player));
-                if (entityTrace != null) {
-                    entityTrace.getEntity().attackEntityFrom(
-                            DamageSource.causePlayerDamage(player),
-                            calculateDamage(ticksSinceLMBPressed, player, entityTrace.getEntity(), isJumping, isSprinting)
-                    );
-                    if (isSprinting) {
-                        entityTrace.getEntity().addVelocity(vectorsToTrace[i].normalize().x * 0.2, vectorsToTrace[i].normalize().y * 0.2, vectorsToTrace[i].normalize().z * 0.2);
-                    }
-                }
+                boolean isBlockDetected = false;
+                double distToBlock = 0, distToEntity = 0;
+                EntityRayTraceResult entityTrace = ProjectileHelper.rayTraceEntities(player, player.getEyePosition(1/*TODO Get correct partial ticks*/), vectorsToTrace[i], player.getBoundingBox().grow(range, range, range), lef, range);
+                RayTraceResult traceResult = world.rayTraceBlocks(new RayTraceContext(player.getEyePosition(1/*TODO Get correct partial ticks*/), vectorsToTrace[i], RayTraceContext.BlockMode.OUTLINE, RayTraceContext.FluidMode.NONE, player));
                 if (traceResult.getType() == RayTraceResult.Type.BLOCK) {
                     BlockRayTraceResult blockTrace = (BlockRayTraceResult) traceResult;
                     Block hittedBlock = world.getBlockState(blockTrace.getPos()).getBlock();
+
+                    isBlockDetected = true;
+                    distToBlock = getDistanceToBlock(player, blockTrace.getPos());
+
                     if (itemToHitWith.getItem() instanceof SwordItem || itemToHitWith.getItem() instanceof HoeItem) {
                         if (hittedBlock instanceof LeavesBlock || hittedBlock instanceof TallGrassBlock) {
-                            world.destroyBlock(blockTrace.getPos(), false);
+                            world.destroyBlock(blockTrace.getPos(), true);
                         }
                     }
                     // TODO play particles on that block (partially done)
                     // TODO play sound of this block (partially done)
                 }
-                player.world.playSound(null, player.getPosX(), player.getPosY(), player.getPosZ(), SoundEvents.ENTITY_PLAYER_ATTACK_SWEEP, player.getSoundCategory(), 1.0F, 1.0F);
-                player.spawnSweepParticles();
+                if (entityTrace != null) {
+                    if(player.canEntityBeSeen(entityTrace.getEntity())){
+                        entityTrace.getEntity().attackEntityFrom(
+                                DamageSource.causePlayerDamage(player),
+                                calculateDamage(ticksSinceLMBPressed, player, entityTrace.getEntity(), isJumping, isSprinting)
+                        );
+                    }
+                    if (isSprinting) {
+                        entityTrace.getEntity().addVelocity(vectorsToTrace[i].normalize().x * 0.01, 0, vectorsToTrace[i].normalize().z * 0.01);
+                    }
+                }
             }
+            player.world.playSound(null, player.getPosX(), player.getPosY(), player.getPosZ(), SoundEvents.ENTITY_PLAYER_ATTACK_SWEEP, player.getSoundCategory(), 1.0F, 1.0F);
+            player.spawnSweepParticles();
         }
         else{
             LOGGER.warn("Hand!");
@@ -172,16 +168,18 @@ public class AdvancedCombatSystem
                 }
             }
         }
+
     }
 
     /**
      * Used for getting ACS attributes from vanilla items
-     * @return 0 - angle(float) | 1 - range(float) | 2 - traceQuality(int) | 3 - neededBackswingTicks(float) | 4 - isHand(boolean) | 5 - maxComboNum(int)
+     * @return 0 - angle(float) | 1 - range(float) | 2 - traceQuality(int) | 3 - neededBackswingTicks(float) | 4 - isHand(boolean) | 5 - maxComboNum(int) | 6 - minBackswingTicks(float)
      */
     public static List<Object> getACSAttributesVanilla(Item itemToHitWith){
         float angle;
         float range;
         float neededBackswingTicks;
+        float minBackswingTicks;
         int traceQuality;
         byte maxComboNum = 0;
         boolean isHand;
@@ -191,8 +189,9 @@ public class AdvancedCombatSystem
             traceQuality = 9;
             neededBackswingTicks = 30;
             maxComboNum = 4;
+            minBackswingTicks = 10;
             isHand = false;
-            return Arrays.asList(angle, range, traceQuality, neededBackswingTicks, isHand, maxComboNum);
+            return Arrays.asList(angle, range, traceQuality, neededBackswingTicks, isHand, maxComboNum, minBackswingTicks);
         }
         else if(itemToHitWith instanceof HoeItem){
             angle = 40;
@@ -200,8 +199,9 @@ public class AdvancedCombatSystem
             traceQuality = 7;
             neededBackswingTicks = 50;
             maxComboNum = 2;
+            minBackswingTicks = 20;
             isHand = false;
-            return Arrays.asList(angle, range, traceQuality, neededBackswingTicks, isHand, maxComboNum);
+            return Arrays.asList(angle, range, traceQuality, neededBackswingTicks, isHand, maxComboNum, minBackswingTicks);
         }
         else if(itemToHitWith instanceof AxeItem){
             angle = 40;
@@ -209,8 +209,9 @@ public class AdvancedCombatSystem
             traceQuality = 7;
             neededBackswingTicks = 70;
             maxComboNum = 2;
+            minBackswingTicks = 30;
             isHand = false;
-            return Arrays.asList(angle, range, traceQuality, neededBackswingTicks, isHand, maxComboNum);
+            return Arrays.asList(angle, range, traceQuality, neededBackswingTicks, isHand, maxComboNum, minBackswingTicks);
         }
         else if(itemToHitWith instanceof ShovelItem){
             angle = 40;
@@ -218,8 +219,9 @@ public class AdvancedCombatSystem
             traceQuality = 7;
             neededBackswingTicks = 50;
             maxComboNum = 3;
+            minBackswingTicks = 20;
             isHand = false;
-            return Arrays.asList(angle, range, traceQuality, neededBackswingTicks, isHand, maxComboNum);
+            return Arrays.asList(angle, range, traceQuality, neededBackswingTicks, isHand, maxComboNum, minBackswingTicks);
         }
         else if(itemToHitWith instanceof PickaxeItem){
             angle = 30;
@@ -227,8 +229,9 @@ public class AdvancedCombatSystem
             traceQuality = 5;
             neededBackswingTicks = 60;
             maxComboNum = 2;
+            minBackswingTicks = 30;
             isHand = false;
-            return Arrays.asList(angle, range, traceQuality, neededBackswingTicks, isHand, maxComboNum);
+            return Arrays.asList(angle, range, traceQuality, neededBackswingTicks, isHand, maxComboNum, minBackswingTicks);
         }
         else{
             angle = 50;
@@ -236,10 +239,31 @@ public class AdvancedCombatSystem
             traceQuality = 9;
             neededBackswingTicks = 10;
             maxComboNum = 6;
+            minBackswingTicks = 3;
             isHand = true;
-            return Arrays.asList(angle, range, traceQuality, neededBackswingTicks, isHand, maxComboNum);
+            return Arrays.asList(angle, range, traceQuality, neededBackswingTicks, isHand, maxComboNum, minBackswingTicks);
         }
     }
+
+    public static double getDistanceToBlock(Entity entity, BlockPos pos) {
+        double deltaX = pos.getX() - entity.getPosX();
+        double deltaY = pos.getY() - entity.getPosY();
+        double deltaZ = pos.getZ() - entity.getPosZ();
+
+        return Math.sqrt((deltaX * deltaX) + (deltaY * deltaY) + (deltaZ * deltaZ));
+    }
+
+    public static double getDistanceToEntity(Entity entityStart, Entity entityEnd) {
+        double deltaX = entityEnd.getPosX() - entityStart.getPosX();
+        double deltaY = entityEnd.getPosY() - entityStart.getPosY();
+        double deltaZ = entityEnd.getPosZ() - entityStart.getPosZ();
+
+        return Math.sqrt((deltaX * deltaX) + (deltaY * deltaY) + (deltaZ * deltaZ));
+    }
+
+    /*public static LivingEntity[] getEntitesNearby(){
+
+    }*/
 }
 
 class LivingEntityFilter implements Predicate<Entity>{
