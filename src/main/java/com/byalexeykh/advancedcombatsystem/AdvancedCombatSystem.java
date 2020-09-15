@@ -6,8 +6,10 @@ import net.minecraft.entity.CreatureAttribute;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.LivingEntity;
 import net.minecraft.entity.SharedMonsterAttributes;
+import net.minecraft.entity.ai.attributes.AttributeModifier;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.entity.projectile.ProjectileHelper;
+import net.minecraft.inventory.EquipmentSlotType;
 import net.minecraft.item.*;
 import net.minecraft.particles.ParticleTypes;
 import net.minecraft.util.DamageSource;
@@ -20,12 +22,17 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import java.util.Arrays;
 import java.util.List;
+import java.util.UUID;
 import java.util.function.Predicate;
 
 public class AdvancedCombatSystem
 {
     public static final String MODID = "advancedcombatsystem";
     private static Logger LOGGER = LogManager.getLogger();
+
+    private static UUID DEFAULT_REDUCE_SPEED_UUID = UUID.randomUUID();
+    public static AttributeModifier DEFAULT_REDUCE_SPEED = new AttributeModifier(DEFAULT_REDUCE_SPEED_UUID, "ASCReduceSpeed", -0.03d, AttributeModifier.Operation.ADDITION);
+
 
     public static float calculateDamage(float ticksSinceLMBPressed, PlayerEntity player, Entity targetEntity, boolean isJumping, boolean isSprinting){
         float BackswingProgress;
@@ -115,20 +122,16 @@ public class AdvancedCombatSystem
                 }
             // Checking what was hit with trace and doing stuff ========================================================
             for (int i = 0; i < traceQuality; i++) {
-                boolean isBlockDetected = false;
-                double distToBlock = 0, distToEntity = 0;
                 EntityRayTraceResult entityTrace = ProjectileHelper.rayTraceEntities(player, player.getEyePosition(1/*TODO Get correct partial ticks*/), vectorsToTrace[i], player.getBoundingBox().grow(range, range, range), lef, range);
-                RayTraceResult traceResult = world.rayTraceBlocks(new RayTraceContext(player.getEyePosition(1/*TODO Get correct partial ticks*/), vectorsToTrace[i], RayTraceContext.BlockMode.OUTLINE, RayTraceContext.FluidMode.NONE, player));
+                RayTraceResult traceResult = world.rayTraceBlocks(new RayTraceContext(player.getEyePosition(1/*TODO Get correct partial ticks*/), vectorsToTrace[i].mul(0.5, 0.5, 0.5), RayTraceContext.BlockMode.OUTLINE, RayTraceContext.FluidMode.NONE, player));
                 if (traceResult.getType() == RayTraceResult.Type.BLOCK) {
                     BlockRayTraceResult blockTrace = (BlockRayTraceResult) traceResult;
                     Block hittedBlock = world.getBlockState(blockTrace.getPos()).getBlock();
 
-                    isBlockDetected = true;
-                    distToBlock = getDistanceToBlock(player, blockTrace.getPos());
-
                     if (itemToHitWith.getItem() instanceof SwordItem || itemToHitWith.getItem() instanceof HoeItem) {
                         if (hittedBlock instanceof LeavesBlock || hittedBlock instanceof TallGrassBlock) {
                             world.destroyBlock(blockTrace.getPos(), true);
+                            player.getHeldItemMainhand().damageItem(1, player, PlayerEntity -> {PlayerEntity.sendBreakAnimation(EquipmentSlotType.MAINHAND);});
                         }
                     }
                     // TODO play particles on that block (partially done)
@@ -140,6 +143,7 @@ public class AdvancedCombatSystem
                                 DamageSource.causePlayerDamage(player),
                                 calculateDamage(ticksSinceLMBPressed, player, entityTrace.getEntity(), isJumping, isSprinting)
                         );
+                        player.getHeldItemMainhand().damageItem(1, player, PlayerEntity -> {PlayerEntity.sendBreakAnimation(EquipmentSlotType.MAINHAND);});
                     }
                     if (isSprinting) {
                         entityTrace.getEntity().addVelocity(vectorsToTrace[i].normalize().x * 0.01, 0, vectorsToTrace[i].normalize().z * 0.01);
@@ -168,7 +172,6 @@ public class AdvancedCombatSystem
                 }
             }
         }
-
     }
 
     /**
@@ -262,7 +265,7 @@ public class AdvancedCombatSystem
     }
 
     /*public static LivingEntity[] getEntitesNearby(){
-
+        // TODO detect skeletons nearby to draw bow indicator above them
     }*/
 }
 

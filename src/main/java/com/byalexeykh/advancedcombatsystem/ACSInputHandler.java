@@ -4,10 +4,10 @@ import com.byalexeykh.advancedcombatsystem.networking.NetworkHandler;
 import com.byalexeykh.advancedcombatsystem.networking.messages.MessageSwing;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.settings.AttackIndicatorStatus;
+import net.minecraft.entity.SharedMonsterAttributes;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.item.SwordItem;
 import net.minecraft.util.Hand;
-import net.minecraft.util.math.BlockRayTraceResult;
 import net.minecraft.util.math.RayTraceResult;
 import net.minecraft.util.math.Vec3d;
 import net.minecraftforge.client.event.InputEvent;
@@ -25,8 +25,8 @@ import org.apache.logging.log4j.Logger;
 public class ACSInputHandler {
 
     private static Logger LOGGER = LogManager.getLogger();
-    private static boolean isMouseLeftKeyPressed = true, isMouseLeftKeyUp = false;
-    private static boolean MouseLeftKeyLastValue = true;
+    private static boolean isMouseLeftKeyPressed = false, isMouseLeftKeyUp = false;
+    private static boolean MouseLeftKeyLastValue = false;
     private static boolean isComboAvailable = false, isComboRuined = false, isComboInProgress = false;
     public static boolean isAccumulatingPower = false;
     private static boolean isAimingAtBlock = false, isHoldingSword = false;
@@ -115,6 +115,10 @@ public class ACSInputHandler {
                     else{
                         isComboAvailable = false;
                         ACSGuiHandler.drawComboIndicator = false;
+                        mc.player.setSprinting(false);
+                        if(!mc.player.getAttribute(SharedMonsterAttributes.MOVEMENT_SPEED).hasModifier(AdvancedCombatSystem.DEFAULT_REDUCE_SPEED)){
+                            mc.player.getAttribute(SharedMonsterAttributes.MOVEMENT_SPEED).applyModifier(AdvancedCombatSystem.DEFAULT_REDUCE_SPEED);
+                        }
                     }
                 }
             }
@@ -124,6 +128,12 @@ public class ACSInputHandler {
 
             // on LMB up ===============================================================================================
             if (!isMouseLeftKeyPressed && MouseLeftKeyLastValue) {
+                LOGGER.warn("========== LMB UP ============");
+
+                if(mc.player.getAttribute(SharedMonsterAttributes.MOVEMENT_SPEED).hasModifier(AdvancedCombatSystem.DEFAULT_REDUCE_SPEED)){
+                    mc.player.getAttribute(SharedMonsterAttributes.MOVEMENT_SPEED).removeModifier(AdvancedCombatSystem.DEFAULT_REDUCE_SPEED);
+                }
+
                 if(ticksLMBPressed >= minBackswingTicks){
                     // Resetting values if power was accumulated but LMB was up when aiming at block
                     if(isAimingAtBlock && !isHoldingSword){
@@ -193,6 +203,7 @@ public class ACSInputHandler {
                             LOGGER.warn("Combo failed! new combo window: " + ticksCanCombo);
                         }
                     }
+                    MouseLeftKeyLastValue = isMouseLeftKeyPressed;
                 }
                 else{
                     if(!isMouseLeftKeyUp){
