@@ -21,6 +21,8 @@ import net.minecraftforge.fml.javafmlmod.FMLJavaModLoadingContext;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
+import java.io.InputStream;
+
 @Mod("advancedcombatsystem")
 public class ACSInputHandler {
 
@@ -28,8 +30,9 @@ public class ACSInputHandler {
     private static boolean isMouseLeftKeyPressed = false, isMouseLeftKeyUp = false;
     private static boolean MouseLeftKeyLastValue = false;
     private static boolean isComboAvailable = false, isComboRuined = false, isComboInProgress = false;
-    public static boolean isAccumulatingPower = false;
     private static boolean isAimingAtBlock = false, isHoldingSword = false;
+    public static boolean isAccumulatingPower = false;
+    public static boolean isBattleMode = false;
     public static float neededBackswingTicks = 0, minBackswingTicks = 0;
     private static float ticksLMBPressed = 0;
     private static float ticksCanComboInit = 10, ticksCanComboCurrent = 0, ticksCanCombo = ticksCanComboInit;
@@ -46,13 +49,22 @@ public class ACSInputHandler {
 
     @SubscribeEvent
     public void OnCommonSetup(FMLCommonSetupEvent event){
+        KeyBinds.register();
         mc = Minecraft.getInstance();
+    }
+
+    // INPUT EVENTS ====================================================================================================
+    @SubscribeEvent
+    public void onToggleBattleModeClick(InputEvent.KeyInputEvent event){
+        if(KeyBinds.BattleModeToggle.isPressed()){
+            isBattleMode = isBattleMode == true ? false : true;
+        }
     }
 
     @SubscribeEvent
     public void onLeftClick(InputEvent.ClickInputEvent event){
         RayTraceResult.Type traceType = mc.objectMouseOver.getType();
-        if(isAccumulatingPower || isHoldingSword || traceType == RayTraceResult.Type.ENTITY || traceType == RayTraceResult.Type.MISS){
+        if(isAccumulatingPower || isHoldingSword || traceType == RayTraceResult.Type.ENTITY || traceType == RayTraceResult.Type.MISS || isBattleMode){
             if(event.isAttack()){
                 event.setCanceled(true);
             }
@@ -70,7 +82,7 @@ public class ACSInputHandler {
         ticksLMBPressed = 0;
     }
 
-    @SubscribeEvent
+    /*@SubscribeEvent
     public void onWorldEntering(EntityJoinWorldEvent event){
         if(event.getEntity() instanceof PlayerEntity){ // TODO think if there are ways to do it better
             try {
@@ -79,8 +91,9 @@ public class ACSInputHandler {
                 LOGGER.error("Error while reading neededBackswingTicks on world enter: " + e);
             }
         }
-    }
+    }*/
 
+    // Main mechanics ==================================================================================================
     @SubscribeEvent
     public void onPlayerTick(TickEvent.PlayerTickEvent event){
         if(event.phase == TickEvent.Phase.START && event.player.world.isRemote) {
@@ -97,7 +110,8 @@ public class ACSInputHandler {
                 isMouseLeftKeyUp = false;
 
                 if(ticksLMBPressed < neededBackswingTicks) {
-                    if(isHoldingSword || !isAimingAtBlock){
+                    if(isHoldingSword || !isAimingAtBlock || isBattleMode){
+                        LOGGER.warn("accumulating power");
                         isAccumulatingPower = true;
                         ticksLMBPressed++;
                     }
@@ -136,7 +150,7 @@ public class ACSInputHandler {
 
                 if(ticksLMBPressed >= minBackswingTicks){
                     // Resetting values if power was accumulated but LMB was up when aiming at block
-                    if(isAimingAtBlock && !isHoldingSword){
+                    if((isAimingAtBlock && !isHoldingSword) && !isBattleMode){
                         ticksLMBPressed = 0;
                         ticksCanCombo = ticksCanComboInit;
                         comboTimerCurrent = 0;
@@ -258,14 +272,14 @@ public class ACSInputHandler {
                 if(mc.gameSettings.keyBindLeft.isKeyDown() && mc.gameSettings.keyBindSprint.isKeyDown() && isOnGround){
                     LOGGER.warn("Dash to left");
                     dashTimerCurrent = 0;
-                    Dash((byte)1, 0.5f);
+                    Dash((byte)1, 0.7f);
                     return;
                 }
                 // Dash to right
                 if(mc.gameSettings.keyBindRight.isKeyDown() && mc.gameSettings.keyBindSprint.isKeyDown() && isOnGround){
                     LOGGER.warn("Dash to right");
                     dashTimerCurrent = 0;
-                    Dash((byte)0, 0.5f);
+                    Dash((byte)0, 0.7f);
                     return;
                 }
             }else{

@@ -48,13 +48,6 @@ public class ACSGuiHandler extends AbstractGui {
                 blit(x, y, 0, 0, bar_width, bar_height);
                 blit(x, y, 0, bar_height, currentWidth, bar_height);
                 blit(x + currentMinBackswing, y + 2, 0, 41, 1, 4);
-                //Some blit param namings
-                //blit(int x, int y, int textureX, int textureY, int width, int height);
-                //blit(int x, int y, TextureAtlasSprite icon, int width, int height);
-                //blit(int x, int y, int textureX, int textureY, int width, int height, int textureWidth, int textureHeight);
-                //blit(int x, int y, int zLevel, float textureX, float textureY, int width, int height, int textureWidth, int textureHeight);
-                //blit(int x, int y, int desiredWidth, int desiredHeight, int textureX, int textureY, int width, int height, int textureWidth, int textureHeight);
-                //innerBlit(int x, int endX, int y, int endY, int zLevel, int width, int height, float textureX, float textureY, int textureWidth, int textureHeight);
             }
             else{
                 isBackswingIndicatorDrawed = false;
@@ -87,12 +80,27 @@ public class ACSGuiHandler extends AbstractGui {
                 drawComboRuinedTimer = timersDefaultValue;
             }
 
-            //Dash cooldown indicator ==================================================================================
+            // Dash cooldown indicator =================================================================================
             if(ACSInputHandler.getDashTimerCurrent() < ACSInputHandler.getDashTimerInit()){
                 float progressPercent = ACSInputHandler.getDashTimerCurrent() / ACSInputHandler.getDashTimerInit();
                 blit(x ,y + 8, 0, 46, 17, 1);
                 blit(x ,y + 8, 0, 47, (int)(17 * progressPercent), 1);
             }
+
+            // Battle toggle indicator =================================================================================
+            if(!ACSInputHandler.isBattleMode){
+                blit(x, y + 25, 0, 48, 13, 13);
+            }else{
+                blit(x, y + 25, 13, 48, 13, 13);
+            }
+
+            //Some blit param namings
+            //blit(int x, int y, int textureX, int textureY, int width, int height);
+            //blit(int x, int y, TextureAtlasSprite icon, int width, int height);
+            //blit(int x, int y, int textureX, int textureY, int width, int height, int textureWidth, int textureHeight);
+            //blit(int x, int y, int zLevel, float textureX, float textureY, int width, int height, int textureWidth, int textureHeight);
+            //blit(int x, int y, int desiredWidth, int desiredHeight, int textureX, int textureY, int width, int height, int textureWidth, int textureHeight);
+            //innerBlit(int x, int endX, int y, int endY, int zLevel, int width, int height, float textureX, float textureY, int textureWidth, int textureHeight);
         }
     }
 }

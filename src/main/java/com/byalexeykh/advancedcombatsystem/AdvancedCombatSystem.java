@@ -1,6 +1,8 @@
 package com.byalexeykh.advancedcombatsystem;
 
 import net.minecraft.block.*;
+import net.minecraft.client.settings.KeyBinding;
+import net.minecraft.client.util.InputMappings;
 import net.minecraft.enchantment.EnchantmentHelper;
 import net.minecraft.entity.CreatureAttribute;
 import net.minecraft.entity.Entity;
@@ -18,10 +20,18 @@ import net.minecraft.util.SoundEvents;
 import net.minecraft.util.math.*;
 import net.minecraft.world.World;
 import net.minecraft.world.server.ServerWorld;
+import net.minecraftforge.client.settings.KeyConflictContext;
+import net.minecraftforge.client.settings.KeyModifier;
+import net.minecraftforge.fml.client.registry.ClientRegistry;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import org.lwjgl.glfw.GLFW;
+
+import java.awt.*;
+import java.io.InputStreamReader;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Map;
 import java.util.UUID;
 import java.util.function.Predicate;
 
@@ -273,6 +283,23 @@ class LivingEntityFilter implements Predicate<Entity>{
     @Override
     public boolean test(Entity entity) {
         return entity instanceof LivingEntity;
+    }
+}
+
+class KeyBinds{
+    public static KeyBinding DashRight;
+    public static KeyBinding DashLeft;
+    public static KeyBinding BattleModeToggle;
+    public static KeyBinding BattleModeAutodetect;
+
+    public static void register(){
+        BattleModeToggle = new KeyBinding("Toggle battle mode", GLFW.GLFW_KEY_B, "Advanced Combat System");
+        ClientRegistry.registerKeyBinding(BattleModeToggle);
+
+        DashRight = new KeyBinding("Dash to right", KeyConflictContext.IN_GAME, KeyModifier.CONTROL, InputMappings.Type.KEYSYM, GLFW.GLFW_KEY_D, "Advanced Combat System");
+        ClientRegistry.registerKeyBinding(DashRight);
+        DashLeft = new KeyBinding("Dash to left", KeyConflictContext.IN_GAME, KeyModifier.CONTROL, InputMappings.Type.KEYSYM, GLFW.GLFW_KEY_A, "Advanced Combat System");
+        ClientRegistry.registerKeyBinding(DashLeft);
     }
 }
 
