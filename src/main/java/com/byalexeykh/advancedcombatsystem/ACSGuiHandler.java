@@ -24,19 +24,17 @@ public class ACSGuiHandler extends AbstractGui {
     @SubscribeEvent
     public void renderOverlay(RenderGameOverlayEvent event){
         if(event.getType() == RenderGameOverlayEvent.ElementType.TEXT){
-            int x = 0, y = 0, screenHeight, screenWidth;
+            int BackswingX = 0, BackswingY = 0, screenHeight, screenWidth;
             mc.getTextureManager().bindTexture(bar);
 
             // Calculating center of a screen ==========================================================================
-            screenHeight = mc.getMainWindow().getHeight();
-            screenWidth = mc.getMainWindow().getWidth();
-            if(mc.gameSettings.guiScale != 0){
-                x = screenWidth / (2 * mc.gameSettings.guiScale) - bar_width / 2;
-                y = screenHeight / (2 * mc.gameSettings.guiScale) + bar_height / 2 + 5;
-            }
+            screenHeight = event.getWindow().getScaledHeight();
+            screenWidth = event.getWindow().getScaledWidth();
+            BackswingX = (screenWidth / 2) - (bar_width / 2);
+            BackswingY = (screenHeight / 2) + 6;
 
             // Draw backswing indicator ================================================================================
-            if(mc.player.getHeldItem(Hand.MAIN_HAND).getItem() instanceof SwordItem || mc.objectMouseOver.getType() == RayTraceResult.Type.ENTITY || ACSInputHandler.isAccumulatingPower)
+            if(mc.player.getHeldItem(Hand.MAIN_HAND).getItem() instanceof SwordItem || mc.objectMouseOver.getType() == RayTraceResult.Type.ENTITY || ACSInputHandler.isAccumulatingPower || ACSInputHandler.isBattleMode)
             {
                 float neededBackswingTicks = (float)AdvancedCombatSystem.getACSAttributesVanilla(mc.player.getHeldItem(Hand.MAIN_HAND).getItem()).get(3); // TODO find a way to not to do it in tick
                 float progressPercent = ACSInputHandler.getTicksLMBPressed() / neededBackswingTicks;
@@ -45,9 +43,9 @@ public class ACSGuiHandler extends AbstractGui {
                 int currentMinBackswing = (int)(bar_width * minBackswingPercent);
                 isBackswingIndicatorDrawed = true;
 
-                blit(x, y, 0, 0, bar_width, bar_height);
-                blit(x, y, 0, bar_height, currentWidth, bar_height);
-                blit(x + currentMinBackswing, y + 2, 0, 41, 1, 4);
+                blit(BackswingX, BackswingY, 0, 0, bar_width, bar_height);
+                blit(BackswingX, BackswingY, 0, bar_height, currentWidth, bar_height);
+                blit(BackswingX + currentMinBackswing, BackswingY + 2, 0, 41, 1, 4);
             }
             else{
                 isBackswingIndicatorDrawed = false;
@@ -56,13 +54,13 @@ public class ACSGuiHandler extends AbstractGui {
             // Combo indicator =========================================================================================
             if(drawComboIndicator && isBackswingIndicatorDrawed)
             {
-                blit(x - 1, y - 1, 18, 6, 37, 14);
+                blit(BackswingX - 1, BackswingY - 1, 18, 6, 37, 14);
             }
 
             // Combo passed indicator ==================================================================================
             if((drawComboPassedIndicator && drawComboPassedIndicatorTimer > 0) && isBackswingIndicatorDrawed)
             {
-                blit(x + (bar_width / 2 + 4), y - 5, 0, 17, 10, 16);
+                blit(BackswingX + (bar_width / 2 + 4), BackswingY - 5, 0, 17, 10, 16);
             }
             drawComboPassedIndicatorTimer--;
             if(drawComboPassedIndicatorTimer <= 0){
@@ -72,7 +70,7 @@ public class ACSGuiHandler extends AbstractGui {
 
             // Backswing ruined indicator ==============================================================================
             if(drawBackwingRuined && drawComboRuinedTimer > 0 && isBackswingIndicatorDrawed){
-                blit(x + bar_width / 2 - 4, y, 0, 31, 5, 9);
+                blit(BackswingX + bar_width / 2 - 4, BackswingY, 0, 31, 5, 9);
                 drawComboRuinedTimer--;
             }
             if(drawComboRuinedTimer <= 0){
@@ -83,15 +81,18 @@ public class ACSGuiHandler extends AbstractGui {
             // Dash cooldown indicator =================================================================================
             if(ACSInputHandler.getDashTimerCurrent() < ACSInputHandler.getDashTimerInit()){
                 float progressPercent = ACSInputHandler.getDashTimerCurrent() / ACSInputHandler.getDashTimerInit();
-                blit(x ,y + 8, 0, 46, 17, 1);
-                blit(x ,y + 8, 0, 47, (int)(17 * progressPercent), 1);
+                blit(BackswingX ,BackswingY + 8, 0, 46, 17, 1);
+                blit(BackswingX ,BackswingY + 8, 0, 47, (int)(17 * progressPercent), 1);
             }
 
             // Battle toggle indicator =================================================================================
+            int battleToggleX, battleToggleY;
+            battleToggleX = screenWidth / 2 - 6;
+            battleToggleY = screenHeight - 50;
             if(!ACSInputHandler.isBattleMode){
-                blit(x, y + 25, 0, 48, 13, 13);
+                blit(battleToggleX, battleToggleY, 0, 48, 13, 13);
             }else{
-                blit(x, y + 25, 13, 48, 13, 13);
+                blit(battleToggleX, battleToggleY, 13, 48, 13, 13);
             }
 
             //Some blit param namings

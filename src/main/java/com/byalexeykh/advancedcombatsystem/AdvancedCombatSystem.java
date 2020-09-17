@@ -105,82 +105,86 @@ public class AdvancedCombatSystem
         CrosshairZenith = player.getPitchYaw().x;
         CrosshairAzimuth = player.getPitchYaw().y;
 
-        // Checking if current item is a hand ======================================================================
-        if(!(boolean) getACSAttributesVanilla(itemToHitWith.getItem()).get(4)) {
-            LOGGER.warn("Not hand!");
-            // Calculating starting point from where calculations will began ===============================================
-            double startAzimuth = CrosshairAzimuth + (angle / 2);
-            double x, y, z;
-            x = range * -Math.cos(Math.toRadians(CrosshairZenith)) * Math.sin(Math.toRadians(startAzimuth));
-            y = range * -Math.sin(Math.toRadians(CrosshairZenith));
-            z = range * Math.cos(Math.toRadians(CrosshairZenith)) *  Math.cos(Math.toRadians(startAzimuth));
-            vectorsToTrace[0] = new Vec3d(
-                    playerPos.x + x,
-                    playerPos.y + y,
-                    playerPos.z + z
-            );
-            // Calculating points for RayTrace =========================================================================
-            for (int i = 1; i < traceQuality; i++) {
-                    x = range * -Math.cos(Math.toRadians(CrosshairZenith)) * Math.sin(Math.toRadians(startAzimuth - deltaAngle * i));
-                    y = range * -Math.sin(Math.toRadians(CrosshairZenith));
-                    z = range * Math.cos(Math.toRadians(CrosshairZenith)) * Math.cos(Math.toRadians(startAzimuth - deltaAngle * i));
-                    vectorsToTrace[i] = new Vec3d(
-                            playerPos.x + x,
-                            playerPos.y + y,
-                            playerPos.z + z
-                    );
-                }
-            // Checking what was hit with trace and doing stuff ========================================================
-            for (int i = 0; i < traceQuality; i++) {
-                EntityRayTraceResult entityTrace = ProjectileHelper.rayTraceEntities(player, player.getEyePosition(1/*TODO Get correct partial ticks*/), vectorsToTrace[i], player.getBoundingBox().grow(range, range, range), lef, range);
-                RayTraceResult traceResult = world.rayTraceBlocks(new RayTraceContext(player.getEyePosition(1/*TODO Get correct partial ticks*/), vectorsToTrace[i].mul(0.5, 0.5, 0.5), RayTraceContext.BlockMode.OUTLINE, RayTraceContext.FluidMode.NONE, player));
-                if (traceResult.getType() == RayTraceResult.Type.BLOCK) {
-                    BlockRayTraceResult blockTrace = (BlockRayTraceResult) traceResult;
-                    Block hittedBlock = world.getBlockState(blockTrace.getPos()).getBlock();
 
-                    if (itemToHitWith.getItem() instanceof SwordItem || itemToHitWith.getItem() instanceof HoeItem) {
-                        if (hittedBlock instanceof LeavesBlock || hittedBlock instanceof TallGrassBlock) {
-                            world.destroyBlock(blockTrace.getPos(), true);
-                            player.getHeldItemMainhand().damageItem(1, player, PlayerEntity -> {PlayerEntity.sendBreakAnimation(EquipmentSlotType.MAINHAND);});
-                        }
-                    }
-                    // TODO play particles on that block (partially done)
-                    // TODO play sound of this block (partially done)
-                }
-                if (entityTrace != null) {
-                    if(player.canEntityBeSeen(entityTrace.getEntity())){
-                        entityTrace.getEntity().attackEntityFrom(
-                                DamageSource.causePlayerDamage(player),
-                                calculateDamage(ticksSinceLMBPressed, player, entityTrace.getEntity(), isJumping, isSprinting)
-                        );
-                        player.getHeldItemMainhand().damageItem(1, player, PlayerEntity -> {PlayerEntity.sendBreakAnimation(EquipmentSlotType.MAINHAND);});
-                    }
-                    if (isSprinting) {
-                        entityTrace.getEntity().addVelocity(vectorsToTrace[i].normalize().x * 0.01, 0, vectorsToTrace[i].normalize().z * 0.01);
-                    }
-                }
-            }
-            player.world.playSound(null, player.getPosX(), player.getPosY(), player.getPosZ(), SoundEvents.ENTITY_PLAYER_ATTACK_SWEEP, player.getSoundCategory(), 1.0F, 1.0F);
-            player.spawnSweepParticles();
+        // Calculating starting point from where calculations will began ===============================================
+        double startAzimuth = CrosshairAzimuth + (angle / 2);
+        double x, y, z;
+        x = range * -Math.cos(Math.toRadians(CrosshairZenith)) * Math.sin(Math.toRadians(startAzimuth));
+        y = range * -Math.sin(Math.toRadians(CrosshairZenith));
+        z = range * Math.cos(Math.toRadians(CrosshairZenith)) *  Math.cos(Math.toRadians(startAzimuth));
+        vectorsToTrace[0] = new Vec3d(
+                x,
+                y,
+                z
+        );
+        // Calculating points for RayTrace =========================================================================
+        for (int i = 1; i < traceQuality; i++) {
+            x = range * -Math.cos(Math.toRadians(CrosshairZenith)) * Math.sin(Math.toRadians(startAzimuth - deltaAngle * i));
+            y = range * -Math.sin(Math.toRadians(CrosshairZenith));
+            z = range * Math.cos(Math.toRadians(CrosshairZenith)) * Math.cos(Math.toRadians(startAzimuth - deltaAngle * i));
+            vectorsToTrace[i] = new Vec3d(
+                    x,
+                    y,
+                    z
+            );
         }
-        else{
-            LOGGER.warn("Hand!");
-            Vec3d endPos = (player.getLookVec().mul(range, range, range)).add(playerPos);
-            EntityRayTraceResult entityTrace = ProjectileHelper.rayTraceEntities(player, playerPos, endPos, player.getBoundingBox().grow(range * 2, range * 2, range * 2), lef, range);
-            RayTraceResult traceResult = world.rayTraceBlocks(new RayTraceContext(player.getEyePosition(1), player.getLookVec(), RayTraceContext.BlockMode.OUTLINE, RayTraceContext.FluidMode.NONE, player));
-            if (entityTrace != null) {
-                entityTrace.getEntity().attackEntityFrom(
-                        DamageSource.causePlayerDamage(player),
-                        calculateDamage(ticksSinceLMBPressed, player, entityTrace.getEntity(), isJumping, isSprinting)
-                );
-            }
+
+        // Checking what was hit with trace and doing stuff ========================================================
+        for (int i = 0; i < traceQuality; i++) {
+            EntityRayTraceResult entityTrace = ProjectileHelper.rayTraceEntities(
+                    player,
+                    player.getEyePosition(0.5f),
+                    new Vec3d(
+                            playerPos.x + vectorsToTrace[i].x,
+                            playerPos.y + vectorsToTrace[i].y,
+                            playerPos.z + vectorsToTrace[i].z),
+                    player.getBoundingBox().grow(range, range, range),
+                    lef,
+                    range
+            );
+
+            RayTraceResult traceResult = world.rayTraceBlocks(
+                    new RayTraceContext(
+                            player.getEyePosition(0.5f),
+                            new Vec3d(
+                                    playerPos.x + vectorsToTrace[i].x / 2,
+                                    playerPos.y + vectorsToTrace[i].y / 2,
+                                    playerPos.z + vectorsToTrace[i].z / 2),
+                            RayTraceContext.BlockMode.OUTLINE,
+                            RayTraceContext.FluidMode.NONE,
+                            player
+                    )
+            );
+
             if (traceResult.getType() == RayTraceResult.Type.BLOCK) {
                 BlockRayTraceResult blockTrace = (BlockRayTraceResult) traceResult;
                 Block hittedBlock = world.getBlockState(blockTrace.getPos()).getBlock();
-                if (hittedBlock instanceof LeavesBlock || hittedBlock instanceof TallGrassBlock) {
-                    world.destroyBlock(blockTrace.getPos(), false);
+
+                if (itemToHitWith.getItem() instanceof SwordItem || itemToHitWith.getItem() instanceof HoeItem) {
+                    if (hittedBlock instanceof LeavesBlock || hittedBlock instanceof TallGrassBlock) {
+                        world.destroyBlock(blockTrace.getPos(), true);
+                        player.getHeldItemMainhand().damageItem(1, player, PlayerEntity -> {PlayerEntity.sendBreakAnimation(EquipmentSlotType.MAINHAND);});
+                    }
                 }
             }
+
+            if (entityTrace != null) {
+                if(player.canEntityBeSeen(entityTrace.getEntity())){
+                    entityTrace.getEntity().attackEntityFrom(
+                            DamageSource.causePlayerDamage(player),
+                            calculateDamage(ticksSinceLMBPressed, player, entityTrace.getEntity(), isJumping, isSprinting)
+                    );
+                    player.getHeldItemMainhand().damageItem(1, player, PlayerEntity -> {PlayerEntity.sendBreakAnimation(EquipmentSlotType.MAINHAND);});
+                }
+                if (isSprinting) {
+                    entityTrace.getEntity().addVelocity(vectorsToTrace[i].normalize().x * 0.01, 0, vectorsToTrace[i].normalize().z * 0.01);
+                }
+            }
+        }
+
+        if(!(boolean)AdvancedCombatSystem.getACSAttributesVanilla(player.getHeldItem(Hand.MAIN_HAND).getItem()).get(4)) {
+            player.world.playSound(null, player.getPosX(), player.getPosY(), player.getPosZ(), SoundEvents.ENTITY_PLAYER_ATTACK_SWEEP, player.getSoundCategory(), 1.0F, 1.0F);
+            player.spawnSweepParticles();
         }
     }
 
@@ -247,9 +251,9 @@ public class AdvancedCombatSystem
             return Arrays.asList(angle, range, traceQuality, neededBackswingTicks, isHand, maxComboNum, minBackswingTicks);
         }
         else{
-            angle = 50;
+            angle = 30;
             range = 6;
-            traceQuality = 9;
+            traceQuality = 5;
             neededBackswingTicks = 10;
             maxComboNum = 6;
             minBackswingTicks = 3;

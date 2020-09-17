@@ -111,7 +111,6 @@ public class ACSInputHandler {
 
                 if(ticksLMBPressed < neededBackswingTicks) {
                     if(isHoldingSword || !isAimingAtBlock || isBattleMode){
-                        LOGGER.warn("accumulating power");
                         isAccumulatingPower = true;
                         ticksLMBPressed++;
                     }
@@ -130,7 +129,7 @@ public class ACSInputHandler {
                         isComboAvailable = false;
                         ACSGuiHandler.drawComboIndicator = false;
                         mc.player.setSprinting(false);
-                        if(!mc.player.getAttribute(SharedMonsterAttributes.MOVEMENT_SPEED).hasModifier(AdvancedCombatSystem.DEFAULT_REDUCE_SPEED)){
+                        if(!mc.player.getAttribute(SharedMonsterAttributes.MOVEMENT_SPEED).hasModifier(AdvancedCombatSystem.DEFAULT_REDUCE_SPEED) && !(boolean)AdvancedCombatSystem.getACSAttributesVanilla(mc.player.getHeldItem(Hand.MAIN_HAND).getItem()).get(4)){
                             mc.player.getAttribute(SharedMonsterAttributes.MOVEMENT_SPEED).applyModifier(AdvancedCombatSystem.DEFAULT_REDUCE_SPEED);
                         }
                     }
@@ -142,8 +141,6 @@ public class ACSInputHandler {
 
             // on LMB up ===============================================================================================
             if (!isMouseLeftKeyPressed && MouseLeftKeyLastValue) {
-                LOGGER.warn("========== LMB UP ============");
-
                 if(mc.player.getAttribute(SharedMonsterAttributes.MOVEMENT_SPEED).hasModifier(AdvancedCombatSystem.DEFAULT_REDUCE_SPEED)){
                     mc.player.getAttribute(SharedMonsterAttributes.MOVEMENT_SPEED).removeModifier(AdvancedCombatSystem.DEFAULT_REDUCE_SPEED);
                 }
@@ -160,7 +157,7 @@ public class ACSInputHandler {
                         isComboInProgress = false;
                         isAccumulatingPower = false;
                         ACSGuiHandler.drawComboIndicator = false;
-                        LOGGER.warn("Aiming at block with accumulated power!");
+                        //LOGGER.warn("Aiming at block with accumulated power!");
                     }
                     else{
                         isAccumulatingPower = false;
@@ -193,6 +190,7 @@ public class ACSInputHandler {
                             if(comboNum > combosAvailable){
                                 comboTimerCurrent = 0;
                                 comboNum = 0;
+                                ticksLMBPressed = neededBackswingTicks - 1;
                                 isComboRuined = true;
                                 isComboAvailable = false;
                                 isComboInProgress = false;
