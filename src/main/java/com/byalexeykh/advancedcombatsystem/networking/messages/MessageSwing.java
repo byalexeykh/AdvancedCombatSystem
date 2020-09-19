@@ -2,27 +2,30 @@ package com.byalexeykh.advancedcombatsystem.networking.messages;
 
 import net.minecraft.item.ItemStack;
 import net.minecraft.network.PacketBuffer;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 
 public class MessageSwing {
 
-    private static ItemStack itemToHitWith;
     private static float ticksLMBIsPressed;
     private static boolean isMessageValid = false;
+    private static int EntityToHitID;
+    private static Logger LOGGER = LogManager.getLogger();
 
     public MessageSwing(){ isMessageValid = false; }
 
-    public MessageSwing(ItemStack itemToHitWith, float ticksLMBIsPressed) {
-        this.itemToHitWith = itemToHitWith;
+    public MessageSwing(ItemStack itemToHitWith, float ticksLMBIsPressed, int EntityToHitID) {
         this.ticksLMBIsPressed = ticksLMBIsPressed;
+        this.EntityToHitID = EntityToHitID;
     }
 
     public static MessageSwing decode(PacketBuffer buffer) {
         MessageSwing ReturnValue = new MessageSwing();
         try {
-            ReturnValue.itemToHitWith = buffer.readItemStack();
             ReturnValue.ticksLMBIsPressed = buffer.readFloat();
+            ReturnValue.EntityToHitID = buffer.readInt();
         } catch(IllegalArgumentException | IndexOutOfBoundsException e){
-            System.out.println("[ACS] Exception while decoding MessageSwing: " + e);
+            LOGGER.error("[ACS] Exception while decoding MessageSwing: " + e);
             return ReturnValue;
         }
         isMessageValid = true;
@@ -30,8 +33,8 @@ public class MessageSwing {
     }
 
     public void encode(PacketBuffer buffer) {
-        buffer.writeItemStack(itemToHitWith);
         buffer.writeFloat(ticksLMBIsPressed);
+        buffer.writeInt(EntityToHitID);
     }
 
     // Service func's
@@ -43,11 +46,11 @@ public class MessageSwing {
         return this.ticksLMBIsPressed;
     }
 
-    public ItemStack getItemToHitWith() { return this.itemToHitWith; }
+    public int getEntityToHitID() {return this.EntityToHitID; }
 
 
     @Override
     public String toString(){
-        return "[ACS] MessageSwing: ticksLMBpressed: " + ticksLMBIsPressed + " | Item: " + itemToHitWith;
+        return "[ACS] MessageSwing: ticksLMBpressed: " + ticksLMBIsPressed + " | EntityToHitID: " + EntityToHitID;
     }
 }

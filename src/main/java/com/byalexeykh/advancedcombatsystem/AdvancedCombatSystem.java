@@ -1,5 +1,9 @@
 package com.byalexeykh.advancedcombatsystem;
 
+import com.byalexeykh.advancedcombatsystem.networking.NetworkHandler;
+import com.byalexeykh.advancedcombatsystem.networking.messages.MessageDestroyBlock;
+import com.byalexeykh.advancedcombatsystem.networking.messages.MessageSwing;
+import com.byalexeykh.advancedcombatsystem.networking.messages.MessageSwingEffects;
 import net.minecraft.block.*;
 import net.minecraft.client.settings.KeyBinding;
 import net.minecraft.client.util.InputMappings;
@@ -11,32 +15,61 @@ import net.minecraft.entity.SharedMonsterAttributes;
 import net.minecraft.entity.ai.attributes.AttributeModifier;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.entity.projectile.ProjectileHelper;
-import net.minecraft.inventory.EquipmentSlotType;
 import net.minecraft.item.*;
 import net.minecraft.particles.ParticleTypes;
-import net.minecraft.util.DamageSource;
 import net.minecraft.util.Hand;
 import net.minecraft.util.SoundEvents;
 import net.minecraft.util.math.*;
 import net.minecraft.world.World;
 import net.minecraft.world.server.ServerWorld;
+import net.minecraftforge.api.distmarker.Dist;
+import net.minecraftforge.api.distmarker.OnlyIn;
 import net.minecraftforge.client.settings.KeyConflictContext;
 import net.minecraftforge.client.settings.KeyModifier;
+import net.minecraftforge.common.MinecraftForge;
+import net.minecraftforge.eventbus.api.SubscribeEvent;
 import net.minecraftforge.fml.client.registry.ClientRegistry;
+import net.minecraftforge.fml.common.Mod;
+import net.minecraftforge.fml.event.lifecycle.FMLClientSetupEvent;
+import net.minecraftforge.fml.event.lifecycle.FMLDedicatedServerSetupEvent;
+import net.minecraftforge.fml.javafmlmod.FMLJavaModLoadingContext;
+import net.minecraftforge.fml.loading.FMLEnvironment;
+import org.apache.logging.log4j.Level;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.lwjgl.glfw.GLFW;
 
-import java.awt.*;
-import java.io.InputStreamReader;
 import java.util.Arrays;
 import java.util.List;
-import java.util.Map;
 import java.util.UUID;
 import java.util.function.Predicate;
 
+@Mod("advancedcombatsystem")
 public class AdvancedCombatSystem
 {
+    public AdvancedCombatSystem(){
+        MinecraftForge.EVENT_BUS.register(this);
+        if(FMLEnvironment.dist == Dist.CLIENT)
+            FMLJavaModLoadingContext.get().getModEventBus().addListener(this::onClienSetup);
+        else
+            FMLJavaModLoadingContext.get().getModEventBus().addListener(this::onServerSetup);
+    }
+
+    @SubscribeEvent
+    @OnlyIn(Dist.CLIENT)
+    public void onClienSetup(FMLClientSetupEvent event){
+        LOGGER.log(Level.INFO, "Client setup for Advanced Combat System...");
+        new ACSInputHandler();
+        new ACSGuiHandler();
+        new NetworkHandler();
+    }
+
+    @SubscribeEvent
+    public void onServerSetup(FMLDedicatedServerSetupEvent event){
+        LOGGER.log(Level.INFO, "Server setup for Advanced Combat System...");
+        new NetworkHandler();
+    }
+
     public static final String MODID = "advancedcombatsystem";
     private static Logger LOGGER = LogManager.getLogger();
 
@@ -44,12 +77,14 @@ public class AdvancedCombatSystem
     public static AttributeModifier DEFAULT_REDUCE_SPEED = new AttributeModifier(DEFAULT_REDUCE_SPEED_UUID, "ASCReduceSpeed", -0.03d, AttributeModifier.Operation.ADDITION);
 
 
-    public static float calculateDamage(float ticksSinceLMBPressed, PlayerEntity player, Entity targetEntity, boolean isJumping, boolean isSprinting){
+    public static float calculateDamage(float ticksSinceLMBPressed, PlayerEntity player, Entity targetEntity){
         float BackswingProgress;
         float basicDamage;
         float currentDamage;
         float jumpModifier = 1.3f;
         float sprintModifier = 1.5f;
+        boolean isJumping = player.fallDistance > 0.0F && !player.onGround && !player.isOnLadder() && !player.isInWater();
+        boolean isSprinting = player.isSprinting();
 
         basicDamage = (float)player.getAttribute(SharedMonsterAttributes.ATTACK_DAMAGE).getValue();
         float f1;
@@ -60,12 +95,12 @@ public class AdvancedCombatSystem
         }
 
         BackswingProgress = ticksSinceLMBPressed / (float) getACSAttributesVanilla(player.getHeldItem(Hand.MAIN_HAND).getItem()).get((3));
-        LOGGER.warn("BackswingProgress =  " + BackswingProgress);
-        LOGGER.warn("f1 value: " + f1);
+        //LOGGER.warn("BackswingProgress =  " + BackswingProgress);
+        //LOGGER.warn("f1 value: " + f1);
         currentDamage = basicDamage * BackswingProgress;
         f1 *= BackswingProgress; // TODO calculate damage considering enchantments on item
         currentDamage += f1;
-        LOGGER.warn("f1 end value: " + f1);
+        //LOGGER.warn("f1 end value: " + f1);
         if(isJumping){
             currentDamage = /*TODO add jumpModifier to item attributes*/ currentDamage * jumpModifier;
             ((ServerWorld)targetEntity.getEntityWorld()).spawnParticle(
@@ -87,17 +122,17 @@ public class AdvancedCombatSystem
             player.world.playSound(null, player.getPosX(), player.getPosY(), player.getPosZ(), SoundEvents.ENTITY_PLAYER_ATTACK_CRIT, player.getSoundCategory(), 1.0F, 1.0F);
         }
 
-        LOGGER.warn("Current damage: " + currentDamage);
+        //LOGGER.warn("Current damage: " + currentDamage);
         return currentDamage;
     }
 
-    public static void swing(World world, PlayerEntity player, ItemStack itemToHitWith, float ticksSinceLMBPressed){
+    public static void swing(PlayerEntity player, float ticksSinceLMBPressed){
+        ItemStack itemToHitWith = player.getHeldItemMainhand();
+        World world = player.getEntityWorld();
         float angle = (float) getACSAttributesVanilla(itemToHitWith.getItem()).get(0); // Yaw
-        float range = (float) getACSAttributesVanilla(itemToHitWith.getItem()).get(1); //
+        float range = (float) getACSAttributesVanilla(itemToHitWith.getItem()).get(1);
         int traceQuality = (int) getACSAttributesVanilla(itemToHitWith.getItem()).get(2); // number of trace attempts. The higher the quality, the denser the trace
         float deltaAngle = angle / (traceQuality - 1);
-        boolean isJumping = player.fallDistance > 0.0F && !player.onGround && !player.isOnLadder() && !player.isInWater();
-        boolean isSprinting = player.isSprinting();
         double CrosshairAzimuth, CrosshairZenith;
         Vec3d playerPos = new Vec3d(player.getPosX(), player.getPosYEye(), player.getPosZ());
         Vec3d vectorsToTrace[] = new Vec3d[traceQuality];
@@ -117,7 +152,7 @@ public class AdvancedCombatSystem
                 y,
                 z
         );
-        // Calculating points for RayTrace =========================================================================
+        // Calculating points for RayTrace =============================================================================
         for (int i = 1; i < traceQuality; i++) {
             x = range * -Math.cos(Math.toRadians(CrosshairZenith)) * Math.sin(Math.toRadians(startAzimuth - deltaAngle * i));
             y = range * -Math.sin(Math.toRadians(CrosshairZenith));
@@ -129,7 +164,7 @@ public class AdvancedCombatSystem
             );
         }
 
-        // Checking what was hit with trace and doing stuff ========================================================
+        // Checking what was hit with trace and doing stuff ============================================================
         for (int i = 0; i < traceQuality; i++) {
             EntityRayTraceResult entityTrace = ProjectileHelper.rayTraceEntities(
                     player,
@@ -143,48 +178,55 @@ public class AdvancedCombatSystem
                     range
             );
 
-            RayTraceResult traceResult = world.rayTraceBlocks(
+            BlockRayTraceResult blockTrace = world.rayTraceBlocks(
                     new RayTraceContext(
                             player.getEyePosition(0.5f),
                             new Vec3d(
-                                    playerPos.x + vectorsToTrace[i].x / 2,
-                                    playerPos.y + vectorsToTrace[i].y / 2,
-                                    playerPos.z + vectorsToTrace[i].z / 2),
+                                    playerPos.x + vectorsToTrace[i].x/ 1.4,
+                                    playerPos.y + vectorsToTrace[i].y/ 1.4,
+                                    playerPos.z + vectorsToTrace[i].z / 1.4),
                             RayTraceContext.BlockMode.OUTLINE,
                             RayTraceContext.FluidMode.NONE,
                             player
                     )
             );
 
-            if (traceResult.getType() == RayTraceResult.Type.BLOCK) {
-                BlockRayTraceResult blockTrace = (BlockRayTraceResult) traceResult;
+            if (blockTrace.getType() == RayTraceResult.Type.BLOCK) {
                 Block hittedBlock = world.getBlockState(blockTrace.getPos()).getBlock();
-
-                if (itemToHitWith.getItem() instanceof SwordItem || itemToHitWith.getItem() instanceof HoeItem) {
-                    if (hittedBlock instanceof LeavesBlock || hittedBlock instanceof TallGrassBlock) {
-                        world.destroyBlock(blockTrace.getPos(), true);
-                        player.getHeldItemMainhand().damageItem(1, player, PlayerEntity -> {PlayerEntity.sendBreakAnimation(EquipmentSlotType.MAINHAND);});
+                if ((itemToHitWith.getItem() instanceof SwordItem || itemToHitWith.getItem() instanceof HoeItem) && !player.isSwimming()) {
+                    if (hittedBlock instanceof LeavesBlock || hittedBlock instanceof TallGrassBlock || hittedBlock instanceof TallFlowerBlock) {
+                        try{
+                            MessageDestroyBlock messageDestroyBlock = new MessageDestroyBlock(blockTrace.getPos());
+                            NetworkHandler.INSTANCE.sendToServer(messageDestroyBlock);
+                        }
+                        catch (Exception e){
+                            LOGGER.error("[ACS] Exception while constructing and sending MessageDestroyBlock to server: " + e);
+                        }
                     }
                 }
             }
 
             if (entityTrace != null) {
                 if(player.canEntityBeSeen(entityTrace.getEntity())){
-                    entityTrace.getEntity().attackEntityFrom(
-                            DamageSource.causePlayerDamage(player),
-                            calculateDamage(ticksSinceLMBPressed, player, entityTrace.getEntity(), isJumping, isSprinting)
-                    );
-                    player.getHeldItemMainhand().damageItem(1, player, PlayerEntity -> {PlayerEntity.sendBreakAnimation(EquipmentSlotType.MAINHAND);});
-                }
-                if (isSprinting) {
-                    entityTrace.getEntity().addVelocity(vectorsToTrace[i].normalize().x * 0.01, 0, vectorsToTrace[i].normalize().z * 0.01);
+                    try{
+                        MessageSwing messageSwing = new MessageSwing(itemToHitWith, ticksSinceLMBPressed, entityTrace.getEntity().getEntityId());
+                        NetworkHandler.INSTANCE.sendToServer(messageSwing);
+                    }
+                    catch(Exception e){
+                        LOGGER.error("[ACS] Exception while constructing and sending MessageSwing to server: " + e);
+                    }
                 }
             }
         }
 
+        // Checking if the current item is a hand, if not then swing effects are not played
         if(!(boolean)AdvancedCombatSystem.getACSAttributesVanilla(player.getHeldItem(Hand.MAIN_HAND).getItem()).get(4)) {
-            player.world.playSound(null, player.getPosX(), player.getPosY(), player.getPosZ(), SoundEvents.ENTITY_PLAYER_ATTACK_SWEEP, player.getSoundCategory(), 1.0F, 1.0F);
-            player.spawnSweepParticles();
+            try{
+                NetworkHandler.INSTANCE.sendToServer(new MessageSwingEffects());
+            }
+            catch(Exception e){
+                LOGGER.error("[ACS] ERROR while sending MessageSwingEffects to server" + e);
+            }
         }
     }
 
@@ -204,19 +246,19 @@ public class AdvancedCombatSystem
             angle = 50;
             range = 7;
             traceQuality = 9;
-            neededBackswingTicks = 30;
+            neededBackswingTicks = 10;
             maxComboNum = 4;
-            minBackswingTicks = 10;
+            minBackswingTicks = 4;
             isHand = false;
             return Arrays.asList(angle, range, traceQuality, neededBackswingTicks, isHand, maxComboNum, minBackswingTicks);
         }
         else if(itemToHitWith instanceof HoeItem){
-            angle = 40;
-            range = 6;
-            traceQuality = 7;
-            neededBackswingTicks = 50;
+            angle = 70;
+            range = 5;
+            traceQuality = 11;
+            neededBackswingTicks = 20;
             maxComboNum = 2;
-            minBackswingTicks = 20;
+            minBackswingTicks = 8;
             isHand = false;
             return Arrays.asList(angle, range, traceQuality, neededBackswingTicks, isHand, maxComboNum, minBackswingTicks);
         }
@@ -224,9 +266,9 @@ public class AdvancedCombatSystem
             angle = 40;
             range = 6;
             traceQuality = 7;
-            neededBackswingTicks = 70;
+            neededBackswingTicks = 30;
             maxComboNum = 2;
-            minBackswingTicks = 30;
+            minBackswingTicks = 10;
             isHand = false;
             return Arrays.asList(angle, range, traceQuality, neededBackswingTicks, isHand, maxComboNum, minBackswingTicks);
         }
@@ -234,19 +276,19 @@ public class AdvancedCombatSystem
             angle = 40;
             range = 6;
             traceQuality = 7;
-            neededBackswingTicks = 50;
+            neededBackswingTicks = 20;
             maxComboNum = 3;
-            minBackswingTicks = 20;
+            minBackswingTicks = 6;
             isHand = false;
             return Arrays.asList(angle, range, traceQuality, neededBackswingTicks, isHand, maxComboNum, minBackswingTicks);
         }
         else if(itemToHitWith instanceof PickaxeItem){
             angle = 30;
-            range = 6;
+            range = 5;
             traceQuality = 5;
-            neededBackswingTicks = 60;
+            neededBackswingTicks = 20;
             maxComboNum = 2;
-            minBackswingTicks = 30;
+            minBackswingTicks = 7;
             isHand = false;
             return Arrays.asList(angle, range, traceQuality, neededBackswingTicks, isHand, maxComboNum, minBackswingTicks);
         }
@@ -254,7 +296,7 @@ public class AdvancedCombatSystem
             angle = 30;
             range = 6;
             traceQuality = 5;
-            neededBackswingTicks = 10;
+            neededBackswingTicks = 6;
             maxComboNum = 6;
             minBackswingTicks = 3;
             isHand = true;

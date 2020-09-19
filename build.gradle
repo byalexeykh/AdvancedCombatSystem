@@ -13,7 +13,7 @@ apply plugin: 'net.minecraftforge.gradle'
 apply plugin: 'eclipse'
 apply plugin: 'maven-publish'
 
-version = '1.15.2-0.1.2'
+version = '1.15.2-0.1.2-31.2.41'
 group = 'com.byalexeykh.advancedcombatsystem' // http://maven.apache.org/guides/mini/guide-naming-conventions.html
 archivesBaseName = 'advancedcombatsystem'
 
@@ -86,7 +86,7 @@ minecraft {
 }
 
 dependencies {
-    minecraft 'net.minecraftforge:forge:1.15.2-31.2.8'
+    minecraft 'net.minecraftforge:forge:1.15.2-31.2.41'
 }
 
 // Example for how to get properties into the manifest for reading by the runtime..

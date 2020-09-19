@@ -6,22 +6,30 @@ import net.minecraft.item.SwordItem;
 import net.minecraft.util.Hand;
 import net.minecraft.util.ResourceLocation;
 import net.minecraft.util.math.RayTraceResult;
+import net.minecraftforge.api.distmarker.Dist;
+import net.minecraftforge.api.distmarker.OnlyIn;
 import net.minecraftforge.client.event.RenderGameOverlayEvent;
+import net.minecraftforge.common.MinecraftForge;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
 import net.minecraftforge.fml.common.Mod;
 
-@Mod.EventBusSubscriber(bus = Mod.EventBusSubscriber.Bus.MOD, modid = "advancedcombatsystem")
+@Mod.EventBusSubscriber(bus = Mod.EventBusSubscriber.Bus.MOD, modid = "advancedcombatsystem", value = Dist.CLIENT)
 public class ACSGuiHandler extends AbstractGui {
-    public ACSGuiHandler(){}
+
+    public ACSGuiHandler(){
+        MinecraftForge.EVENT_BUS.register(this);
+        mc = Minecraft.getInstance();
+    }
 
     private final ResourceLocation bar = new ResourceLocation(AdvancedCombatSystem.MODID, "textures/gui/power_indicator.png");
-    private final Minecraft mc = Minecraft.getInstance();
     private final int bar_width = 18, bar_height = 7;
     private float timersDefaultValue = 35, drawComboPassedIndicatorTimer = 0, drawComboRuinedTimer = 0;
     public static boolean drawComboIndicator = false, drawComboPassedIndicator = false, drawBackwingRuined = false;
     private static boolean isBackswingIndicatorDrawed = false;
+    private Minecraft mc;
 
     @SubscribeEvent
+    @OnlyIn(Dist.CLIENT)
     public void renderOverlay(RenderGameOverlayEvent event){
         if(event.getType() == RenderGameOverlayEvent.ElementType.TEXT){
             int BackswingX = 0, BackswingY = 0, screenHeight, screenWidth;
