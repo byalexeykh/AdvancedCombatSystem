@@ -45,10 +45,14 @@ public class ServerMessagesHandler {
 
         ctx.enqueueWork(() ->{
             Entity entityToHit = world.getEntityByID(msg.getEntityToHitID());
-            entityToHit.getEntity().attackEntityFrom(
-                    DamageSource.causePlayerDamage(player),
-                    calculateDamage(msg.getTicksLMBIsPressed(), player, entityToHit)
-            );
+            try{
+                entityToHit.getEntity().attackEntityFrom(
+                        DamageSource.causePlayerDamage(player),
+                        calculateDamage(msg.getTicksLMBIsPressed(), player, entityToHit)
+                );
+            }catch (Exception e){
+                LOGGER.error("[ACS-server] ERROR while executing attackEntityFrom: " + e + " | player: " + player + " | message: " + msg + " | entityToHit: " + entityToHit);
+            }
             if(player.isSprinting()){
                 entityToHit.addVelocity((entityToHit.getPosX() - player.getPosX()) / 1.3, (entityToHit.getPosX() - player.getPosYEye()) / 1.3, (entityToHit.getPosZ() - player.getPosZ()) / 1.3);
             }

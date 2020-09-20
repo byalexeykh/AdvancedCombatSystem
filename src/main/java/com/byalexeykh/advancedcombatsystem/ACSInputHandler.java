@@ -31,8 +31,8 @@ public class ACSInputHandler {
     public static boolean isBattleMode = false;
     public static float neededBackswingTicks = 0, minBackswingTicks = 0;
     private static float ticksLMBPressed = 0;
-    private static float ticksCanComboInit = 10, ticksCanComboCurrent = 0, ticksCanCombo = ticksCanComboInit;
-    private static float comboComplicationDelta = 0.2f, comboTimerInit = 50, comboTimerCurrent = 0;
+    private static float ticksCanComboInit = 30, ticksCanComboCurrent = 0, ticksCanCombo = ticksCanComboInit;
+    private static float comboComplicationDelta = 0.2f, comboTimerInit = 8, comboTimerCurrent = 0;
     private static float dashTimerInit = 70, dashTimerCurrent = 0;
     private static byte comboNum = 0, combosAvailable = 4;
     private static Minecraft mc;
@@ -135,7 +135,7 @@ public class ACSInputHandler {
                 if(ticksLMBPressed >= minBackswingTicks){
                     // Resetting values if power was accumulated but LMB was up when aiming at block
                     boolean isBlocking = mc.player.isActiveItemStackBlocking();
-                    LOGGER.warn("isBlocking = " + isBlocking);
+                    //LOGGER.warn("isBlocking = " + isBlocking);
                     if((isAimingAtBlock && !isHoldingSword) && !isBattleMode || isBlocking){
                         ticksLMBPressed = 0;
                         ticksCanCombo = ticksCanComboInit;
@@ -173,7 +173,7 @@ public class ACSInputHandler {
                                 isComboRuined = false;
                                 isComboAvailable = false;
                                 isComboInProgress = true;
-                                ticksCanCombo = ticksCanComboInit / (comboComplicationDelta * comboNum);
+                                ticksCanCombo = ticksCanComboInit * (float)(Math.pow(comboComplicationDelta, comboNum));
                                 //LOGGER.warn("Combo passed! new combo window: " + ticksCanCombo);
                                 ACSGuiHandler.drawComboPassedIndicator = true;
                             }
@@ -242,14 +242,14 @@ public class ACSInputHandler {
                 if(mc.gameSettings.keyBindLeft.isKeyDown() && mc.gameSettings.keyBindSprint.isKeyDown() && isOnGround){
                     //LOGGER.warn("Dash to left");
                     dashTimerCurrent = 0;
-                    Dash((byte)1, 0.7f);
+                    Dash((byte)1, 0.6f);
                     return;
                 }
                 // Dash to right
                 if(mc.gameSettings.keyBindRight.isKeyDown() && mc.gameSettings.keyBindSprint.isKeyDown() && isOnGround){
                     //LOGGER.warn("Dash to right");
                     dashTimerCurrent = 0;
-                    Dash((byte)0, 0.7f);
+                    Dash((byte)0, 0.6f);
                     return;
                 }
             }else{

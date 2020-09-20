@@ -246,9 +246,9 @@ public class AdvancedCombatSystem
             angle = 50;
             range = 7;
             traceQuality = 9;
-            neededBackswingTicks = 10;
+            neededBackswingTicks = 16;
             maxComboNum = 4;
-            minBackswingTicks = 4;
+            minBackswingTicks = 5;
             isHand = false;
             return Arrays.asList(angle, range, traceQuality, neededBackswingTicks, isHand, maxComboNum, minBackswingTicks);
         }
