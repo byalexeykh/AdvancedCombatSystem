@@ -1,11 +1,12 @@
 package com.byalexeykh.advancedcombatsystem;
 
+import com.byalexeykh.advancedcombatsystem.items.ACSAttributesContainer;
+import com.byalexeykh.advancedcombatsystem.items.AdvancedSwordItem;
+import com.byalexeykh.advancedcombatsystem.items.AdvancedTiredItem;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.settings.AttackIndicatorStatus;
 import net.minecraft.entity.SharedMonsterAttributes;
-import net.minecraft.entity.player.PlayerEntity;
-import net.minecraft.item.ShieldItem;
-import net.minecraft.item.SwordItem;
+import net.minecraft.item.Item;
 import net.minecraft.util.Hand;
 import net.minecraft.util.math.RayTraceResult;
 import net.minecraft.util.math.Vec3d;
@@ -29,12 +30,12 @@ public class ACSInputHandler {
     private static boolean isAimingAtBlock = false, isHoldingSword = false;
     public static boolean isAccumulatingPower = false;
     public static boolean isBattleMode = false;
-    public static float neededBackswingTicks = 0, minBackswingTicks = 0;
+    private static float neededBackswingTicks = 0, minBackswingTicks = 0;
     private static float ticksLMBPressed = 0;
     private static float ticksCanComboInit = 30, ticksCanComboCurrent = 0, ticksCanCombo = ticksCanComboInit;
     private static float comboComplicationDelta = 0.2f, comboTimerInit = 8, comboTimerCurrent = 0;
     private static float dashTimerInit = 70, dashTimerCurrent = 0;
-    private static byte comboNum = 0, combosAvailable = 4;
+    private static int comboNum = 0, combosAvailable = 4;
     private static Minecraft mc;
 
     public ACSInputHandler(){
@@ -61,9 +62,10 @@ public class ACSInputHandler {
                 event.setCanceled(true);
             }
         }
-        neededBackswingTicks = (float)AdvancedCombatSystem.getACSAttributesVanilla(mc.player.getHeldItem(Hand.MAIN_HAND).getItem()).get(3);
-        minBackswingTicks = (float)AdvancedCombatSystem.getACSAttributesVanilla(mc.player.getHeldItem(Hand.MAIN_HAND).getItem()).get(6);
-        combosAvailable = (byte)AdvancedCombatSystem.getACSAttributesVanilla(mc.player.getHeldItem(Hand.MAIN_HAND).getItem()).get(5);
+        Item currentItem = mc.player.getHeldItemMainhand().getItem();
+        neededBackswingTicks = ACSAttributesContainer.get(currentItem).NEEDED_BACKSWING_TICKS;
+        minBackswingTicks = ACSAttributesContainer.get(currentItem).MIN_BACKSWING_TICKS;
+        combosAvailable = ACSAttributesContainer.get(currentItem).MAX_COMBO_NUM;
     }
 
     @SubscribeEvent
@@ -85,7 +87,7 @@ public class ACSInputHandler {
             if (isAccumulatingPower) {
                 event.player.isSwingInProgress = false;
             }
-            isHoldingSword = mc.player.getHeldItem(Hand.MAIN_HAND).getItem() instanceof SwordItem;
+            isHoldingSword = mc.player.getHeldItem(Hand.MAIN_HAND).getItem() instanceof AdvancedSwordItem;
             if(mc.objectMouseOver != null)
                 isAimingAtBlock = mc.objectMouseOver.getType() == RayTraceResult.Type.BLOCK;
             mc.gameSettings.attackIndicator = AttackIndicatorStatus.OFF;
@@ -116,7 +118,7 @@ public class ACSInputHandler {
                         isComboAvailable = false;
                         ACSGuiHandler.drawComboIndicator = false;
                         mc.player.setSprinting(false);
-                        if(!mc.player.getAttribute(SharedMonsterAttributes.MOVEMENT_SPEED).hasModifier(AdvancedCombatSystem.DEFAULT_REDUCE_SPEED) && !(boolean)AdvancedCombatSystem.getACSAttributesVanilla(mc.player.getHeldItem(Hand.MAIN_HAND).getItem()).get(4)){
+                        if(!mc.player.getAttribute(SharedMonsterAttributes.MOVEMENT_SPEED).hasModifier(AdvancedCombatSystem.DEFAULT_REDUCE_SPEED) && mc.player.getHeldItemMainhand().getItem() instanceof AdvancedTiredItem){
                             mc.player.getAttribute(SharedMonsterAttributes.MOVEMENT_SPEED).applyModifier(AdvancedCombatSystem.DEFAULT_REDUCE_SPEED);
                         }
                     }

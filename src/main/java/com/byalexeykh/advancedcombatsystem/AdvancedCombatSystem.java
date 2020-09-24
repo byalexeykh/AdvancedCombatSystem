@@ -1,5 +1,9 @@
 package com.byalexeykh.advancedcombatsystem;
 
+import com.byalexeykh.advancedcombatsystem.items.ACSAttributesContainer;
+import com.byalexeykh.advancedcombatsystem.items.AdvancedItems;
+import com.byalexeykh.advancedcombatsystem.items.AdvancedSwordItem;
+import com.byalexeykh.advancedcombatsystem.items.AdvancedTiredItem;
 import com.byalexeykh.advancedcombatsystem.networking.NetworkHandler;
 import com.byalexeykh.advancedcombatsystem.networking.messages.MessageDestroyBlock;
 import com.byalexeykh.advancedcombatsystem.networking.messages.MessageSwing;
@@ -27,13 +31,17 @@ import net.minecraftforge.api.distmarker.OnlyIn;
 import net.minecraftforge.client.settings.KeyConflictContext;
 import net.minecraftforge.client.settings.KeyModifier;
 import net.minecraftforge.common.MinecraftForge;
+import net.minecraftforge.event.RegistryEvent;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
+import net.minecraftforge.fml.RegistryObject;
 import net.minecraftforge.fml.client.registry.ClientRegistry;
 import net.minecraftforge.fml.common.Mod;
 import net.minecraftforge.fml.event.lifecycle.FMLClientSetupEvent;
 import net.minecraftforge.fml.event.lifecycle.FMLDedicatedServerSetupEvent;
 import net.minecraftforge.fml.javafmlmod.FMLJavaModLoadingContext;
 import net.minecraftforge.fml.loading.FMLEnvironment;
+import net.minecraftforge.registries.DeferredRegister;
+import net.minecraftforge.registries.ForgeRegistries;
 import org.apache.logging.log4j.Level;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -47,12 +55,45 @@ import java.util.function.Predicate;
 @Mod("advancedcombatsystem")
 public class AdvancedCombatSystem
 {
+
+    public static final String MOD_ID = "advancedcombatsystem";
+
+    private static final DeferredRegister<Item> ITEMS = DeferredRegister.create(ForgeRegistries.ITEMS, "minecraft");
+    public static final RegistryObject<Item> WOODEN_SWORD = ITEMS.register("wooden_sword", () -> AdvancedItems.wooden_sword);
+    public static final RegistryObject<Item> GOLDEN_SWORD = ITEMS.register("golden_sword", () -> AdvancedItems.golden_sword);
+    public static final RegistryObject<Item> STONE_SWORD = ITEMS.register("stone_sword", () -> AdvancedItems.stone_sword);
+    public static final RegistryObject<Item> IRON_SWORD = ITEMS.register("iron_sword", () -> AdvancedItems.iron_sword);
+    public static final RegistryObject<Item> DIAMOND_SWORD = ITEMS.register("diamond_sword", () -> AdvancedItems.diamond_sword);
+    public static final RegistryObject<Item> WOODEN_AXE = ITEMS.register("wooden_axe", () -> AdvancedItems.wooden_axe);
+    public static final RegistryObject<Item> GOLDEN_AXE = ITEMS.register("golden_axe", () -> AdvancedItems.golden_axe);
+    public static final RegistryObject<Item> STONE_AXE = ITEMS.register("stone_axe", () -> AdvancedItems.stone_axe);
+    public static final RegistryObject<Item> IRON_AXE = ITEMS.register("iron_axe", () -> AdvancedItems.iron_axe);
+    public static final RegistryObject<Item> DIAMOND_AXE = ITEMS.register("diamond_axe", () -> AdvancedItems.diamond_axe);
+    public static final RegistryObject<Item> WOODEN_HOE = ITEMS.register("wooden_hoe", () -> AdvancedItems.wooden_hoe);
+    public static final RegistryObject<Item> GOLDEN_HOE = ITEMS.register("golden_hoe", () -> AdvancedItems.golden_hoe);
+    public static final RegistryObject<Item> STONE_HOE = ITEMS.register("stone_hoe", () -> AdvancedItems.stone_hoe);
+    public static final RegistryObject<Item> IRON_HOE = ITEMS.register("iron_hoe", () -> AdvancedItems.iron_hoe);
+    public static final RegistryObject<Item> DIAMOND_HOE = ITEMS.register("diamond_hoe", () -> AdvancedItems.diamond_hoe);
+    public static final RegistryObject<Item> WOODEN_PICKAXE = ITEMS.register("wooden_pickaxe", () -> AdvancedItems.wooden_pickaxe);
+    public static final RegistryObject<Item> GOLDEN_PICKAXE = ITEMS.register("golden_pickaxe", () -> AdvancedItems.golden_pickaxe);
+    public static final RegistryObject<Item> STONE_PICKAXE = ITEMS.register("stone_pickaxe", () -> AdvancedItems.stone_pickaxe);
+    public static final RegistryObject<Item> IRON_PICKAXE = ITEMS.register("iron_pickaxe", () -> AdvancedItems.iron_pickaxe);
+    public static final RegistryObject<Item> DIAMOND_PICKAXE = ITEMS.register("diamond_pickaxe", () -> AdvancedItems.diamond_pickaxe);
+    public static final RegistryObject<Item> WOODEN_SHOVEL = ITEMS.register("wooden_shovel", () -> AdvancedItems.wooden_shovel);
+    public static final RegistryObject<Item> GOLDEN_SHOVEL = ITEMS.register("golden_shovel", () -> AdvancedItems.golden_shovel);
+    public static final RegistryObject<Item> STONE_SHOVEL = ITEMS.register("stone_shovel", () -> AdvancedItems.stone_shovel);
+    public static final RegistryObject<Item> IRON_SHOVEL = ITEMS.register("iron_shovel", () -> AdvancedItems.iron_shovel);
+    public static final RegistryObject<Item> DIAMOND_SHOVEL = ITEMS.register("diamond_shovel", () -> AdvancedItems.diamond_shovel);
+
     public AdvancedCombatSystem(){
         MinecraftForge.EVENT_BUS.register(this);
-        if(FMLEnvironment.dist == Dist.CLIENT)
+        if(FMLEnvironment.dist == Dist.CLIENT){
             FMLJavaModLoadingContext.get().getModEventBus().addListener(this::onClienSetup);
-        else
+        }
+        else{
             FMLJavaModLoadingContext.get().getModEventBus().addListener(this::onServerSetup);
+        }
+        ITEMS.register(FMLJavaModLoadingContext.get().getModEventBus());
     }
 
     @SubscribeEvent
@@ -85,6 +126,7 @@ public class AdvancedCombatSystem
         float sprintModifier = 1.5f;
         boolean isJumping = player.fallDistance > 0.0F && !player.onGround && !player.isOnLadder() && !player.isInWater();
         boolean isSprinting = player.isSprinting();
+        ACSAttributesContainer acsAttributesContainer = ACSAttributesContainer.get(player.getHeldItemMainhand().getItem());
 
         basicDamage = (float)player.getAttribute(SharedMonsterAttributes.ATTACK_DAMAGE).getValue();
         float f1;
@@ -94,7 +136,7 @@ public class AdvancedCombatSystem
             f1 = EnchantmentHelper.getModifierForCreature(player.getHeldItemMainhand(), CreatureAttribute.UNDEFINED);
         }
 
-        BackswingProgress = ticksSinceLMBPressed / (float) getACSAttributesVanilla(player.getHeldItem(Hand.MAIN_HAND).getItem()).get((3));
+        BackswingProgress = ticksSinceLMBPressed / acsAttributesContainer.NEEDED_BACKSWING_TICKS;
         //LOGGER.warn("BackswingProgress =  " + BackswingProgress);
         //LOGGER.warn("f1 value: " + f1);
         currentDamage = basicDamage * BackswingProgress;
@@ -129,9 +171,10 @@ public class AdvancedCombatSystem
     public static void swing(PlayerEntity player, float ticksSinceLMBPressed){
         ItemStack itemToHitWith = player.getHeldItemMainhand();
         World world = player.getEntityWorld();
-        float angle = (float) getACSAttributesVanilla(itemToHitWith.getItem()).get(0); // Yaw
-        float range = (float) getACSAttributesVanilla(itemToHitWith.getItem()).get(1);
-        int traceQuality = (int) getACSAttributesVanilla(itemToHitWith.getItem()).get(2); // number of trace attempts. The higher the quality, the denser the trace
+        ACSAttributesContainer acsAttributesContainer = ACSAttributesContainer.get(itemToHitWith.getItem());
+        float angle = acsAttributesContainer.ANGLE; // Yaw
+        float range = acsAttributesContainer.RANGE;
+        int traceQuality = (int)((angle / 10) % 2 == 0 ? (angle / 10) - 1 : (angle / 10)); // number of trace attempts. The higher the quality, the denser the trace
         float deltaAngle = angle / (traceQuality - 1);
         double CrosshairAzimuth, CrosshairZenith;
         Vec3d playerPos = new Vec3d(player.getPosX(), player.getPosYEye(), player.getPosZ());
@@ -139,6 +182,8 @@ public class AdvancedCombatSystem
         LivingEntityFilter lef = new LivingEntityFilter();
         CrosshairZenith = player.getPitchYaw().x;
         CrosshairAzimuth = player.getPitchYaw().y;
+
+        System.out.println();
 
 
         // Calculating starting point from where calculations will began ===============================================
@@ -220,87 +265,13 @@ public class AdvancedCombatSystem
         }
 
         // Checking if the current item is a hand, if not then swing effects are not played
-        if(!(boolean)AdvancedCombatSystem.getACSAttributesVanilla(player.getHeldItem(Hand.MAIN_HAND).getItem()).get(4)) {
+        if(itemToHitWith.getItem() instanceof AdvancedTiredItem) {
             try{
                 NetworkHandler.INSTANCE.sendToServer(new MessageSwingEffects());
             }
             catch(Exception e){
                 LOGGER.error("[ACS] ERROR while sending MessageSwingEffects to server" + e);
             }
-        }
-    }
-
-    /**
-     * Used for getting ACS attributes from vanilla items
-     * @return 0 - angle(float) | 1 - range(float) | 2 - traceQuality(int) | 3 - neededBackswingTicks(float) | 4 - isHand(boolean) | 5 - maxComboNum(int) | 6 - minBackswingTicks(float)
-     */
-    public static List<Object> getACSAttributesVanilla(Item itemToHitWith){
-        float angle;
-        float range;
-        float neededBackswingTicks;
-        float minBackswingTicks;
-        int traceQuality;
-        byte maxComboNum = 0;
-        boolean isHand;
-        if(itemToHitWith instanceof SwordItem) {
-            angle = 50;
-            range = 7;
-            traceQuality = 9;
-            neededBackswingTicks = 16;
-            maxComboNum = 4;
-            minBackswingTicks = 5;
-            isHand = false;
-            return Arrays.asList(angle, range, traceQuality, neededBackswingTicks, isHand, maxComboNum, minBackswingTicks);
-        }
-        else if(itemToHitWith instanceof HoeItem){
-            angle = 70;
-            range = 5;
-            traceQuality = 11;
-            neededBackswingTicks = 20;
-            maxComboNum = 2;
-            minBackswingTicks = 8;
-            isHand = false;
-            return Arrays.asList(angle, range, traceQuality, neededBackswingTicks, isHand, maxComboNum, minBackswingTicks);
-        }
-        else if(itemToHitWith instanceof AxeItem){
-            angle = 40;
-            range = 6;
-            traceQuality = 7;
-            neededBackswingTicks = 30;
-            maxComboNum = 2;
-            minBackswingTicks = 10;
-            isHand = false;
-            return Arrays.asList(angle, range, traceQuality, neededBackswingTicks, isHand, maxComboNum, minBackswingTicks);
-        }
-        else if(itemToHitWith instanceof ShovelItem){
-            angle = 40;
-            range = 6;
-            traceQuality = 7;
-            neededBackswingTicks = 20;
-            maxComboNum = 3;
-            minBackswingTicks = 6;
-            isHand = false;
-            return Arrays.asList(angle, range, traceQuality, neededBackswingTicks, isHand, maxComboNum, minBackswingTicks);
-        }
-        else if(itemToHitWith instanceof PickaxeItem){
-            angle = 30;
-            range = 5;
-            traceQuality = 5;
-            neededBackswingTicks = 20;
-            maxComboNum = 2;
-            minBackswingTicks = 7;
-            isHand = false;
-            return Arrays.asList(angle, range, traceQuality, neededBackswingTicks, isHand, maxComboNum, minBackswingTicks);
-        }
-        else{
-            angle = 30;
-            range = 6;
-            traceQuality = 5;
-            neededBackswingTicks = 6;
-            maxComboNum = 6;
-            minBackswingTicks = 3;
-            isHand = true;
-            return Arrays.asList(angle, range, traceQuality, neededBackswingTicks, isHand, maxComboNum, minBackswingTicks);
         }
     }
 

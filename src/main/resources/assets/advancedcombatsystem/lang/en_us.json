@@ -1,4 +1,5 @@
 {
-  "key.categories.AdvancedCombatSystem" : "Advanced Combat System",
+  "item.advancedcombatsystem.wooden_sword": "Wooden Sword",
+  "key.categories.advancedcombatsystem" : "Advanced Combat System",
   "key.BattleModeToggle" : "Toggle battle mode"
 }

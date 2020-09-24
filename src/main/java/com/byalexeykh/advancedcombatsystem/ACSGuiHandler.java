@@ -1,5 +1,7 @@
 package com.byalexeykh.advancedcombatsystem;
 
+import com.byalexeykh.advancedcombatsystem.items.ACSAttributesContainer;
+import com.byalexeykh.advancedcombatsystem.items.AdvancedSwordItem;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.AbstractGui;
 import net.minecraft.item.SwordItem;
@@ -42,11 +44,11 @@ public class ACSGuiHandler extends AbstractGui {
             BackswingY = (screenHeight / 2) + 6;
 
             // Draw backswing indicator ================================================================================
-            if(mc.player.getHeldItem(Hand.MAIN_HAND).getItem() instanceof SwordItem || mc.objectMouseOver.getType() == RayTraceResult.Type.ENTITY || ACSInputHandler.isAccumulatingPower || ACSInputHandler.isBattleMode)
+            if(mc.player.getHeldItem(Hand.MAIN_HAND).getItem() instanceof AdvancedSwordItem || mc.objectMouseOver.getType() == RayTraceResult.Type.ENTITY || ACSInputHandler.isAccumulatingPower || ACSInputHandler.isBattleMode)
             {
-                float neededBackswingTicks = (float)AdvancedCombatSystem.getACSAttributesVanilla(mc.player.getHeldItem(Hand.MAIN_HAND).getItem()).get(3); // TODO find a way to not to do it in tick
+                float neededBackswingTicks = ACSAttributesContainer.get(mc.player.getHeldItemMainhand().getItem()).NEEDED_BACKSWING_TICKS; // TODO find a way to not to do it in tick
                 float progressPercent = ACSInputHandler.getTicksLMBPressed() / neededBackswingTicks;
-                float minBackswingPercent = (float)AdvancedCombatSystem.getACSAttributesVanilla(mc.player.getHeldItem(Hand.MAIN_HAND).getItem()).get(6) / neededBackswingTicks;
+                float minBackswingPercent = ACSAttributesContainer.get(mc.player.getHeldItemMainhand().getItem()).MIN_BACKSWING_TICKS / neededBackswingTicks;
                 int currentWidth = (int)(bar_width * progressPercent);
                 int currentMinBackswing = (int)(bar_width * minBackswingPercent);
                 isBackswingIndicatorDrawed = true;
