@@ -15,24 +15,14 @@ import net.minecraft.world.World;
 public class AdvancedSwordItem extends AdvancedTiredItem {
     private final float attackDamage;
     // ACS attributes
-    private final float angle;
-    private final float range;
-    private final float neededBackswingTicks;
-    private final float minBackswingTicks;
-    private final int maxComboNum;
-    public AdvancedSwordItem(IItemTier tier, float attackDamageIn, float angleIn, float rangeIn, float neededBackswingTicksIn, float minBackswingTicksIn, int maxComboNumIn, Properties builder) {
-        super(tier, angleIn, rangeIn, neededBackswingTicksIn, minBackswingTicksIn, maxComboNumIn, builder);
-        this.attackDamage = (float)attackDamageIn + tier.getAttackDamage();
-        this.angle = angleIn;
-        this.range = rangeIn;
-        this.neededBackswingTicks = neededBackswingTicksIn;
-        this.minBackswingTicks = minBackswingTicksIn;
-        this.maxComboNum = maxComboNumIn;
+    public AdvancedSwordItem(IItemTier tier, float attackDamageIn, float angleIn, float rangeIn, float neededBackswingTicksIn, float minBackswingTicksIn, int maxComboNumIn, double speedReduceModifierIn, Properties builder) {
+        super(tier, angleIn, rangeIn, neededBackswingTicksIn, minBackswingTicksIn, maxComboNumIn, speedReduceModifierIn, builder);
+        this.attackDamage = attackDamageIn + tier.getAttackDamage();
     }
 
     public boolean canDestroyBySwing(BlockState blockState){
         Material material = blockState.getMaterial();
-        return material != Material.PLANTS && material != Material.TALL_PLANTS && material != Material.CORAL && !blockState.isIn(BlockTags.LEAVES) && blockState.getBlock() == Blocks.COBWEB ? false : true;
+        return material != Material.PLANTS && material != Material.TALL_PLANTS && material != Material.CORAL && !blockState.isIn(BlockTags.LEAVES) && blockState.getBlock() != Blocks.COBWEB ? false : true;
     }
 
     public float getAttackDamage() {

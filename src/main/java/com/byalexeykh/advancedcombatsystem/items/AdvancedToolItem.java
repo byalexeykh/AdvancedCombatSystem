@@ -14,21 +14,10 @@ import java.util.Set;
 public class AdvancedToolItem extends AdvancedTiredItem {
     private final Set<Block> effectiveBlocks;
     protected final float efficiency;
-    // ACS attributes
     private final float attackDamage;
-    private final float angle;
-    private final float range;
-    private final float neededBackswingTicks;
-    private final float minBackswingTicks;
-    private final int maxComboNum;
-    public AdvancedToolItem(IItemTier tier, float attackDamageIn, Set<Block> effectiveBlocksIn, float angleIn, float rangeIn, float neededBackswingTicksIn, float minBackswingTicksIn, int maxComboNumIn, Properties builder) {
-        super(tier, angleIn, rangeIn, neededBackswingTicksIn, minBackswingTicksIn, maxComboNumIn, builder);
+    public AdvancedToolItem(IItemTier tier, float attackDamageIn, Set<Block> effectiveBlocksIn, float angleIn, float rangeIn, float neededBackswingTicksIn, float minBackswingTicksIn, int maxComboNumIn, double speedReduceModifierIn, Properties builder) {
+        super(tier, angleIn, rangeIn, neededBackswingTicksIn, minBackswingTicksIn, maxComboNumIn, speedReduceModifierIn, builder);
         this.attackDamage = attackDamageIn + tier.getAttackDamage();
-        this.angle = angleIn;
-        this.range = rangeIn;
-        this.neededBackswingTicks = neededBackswingTicksIn;
-        this.minBackswingTicks = minBackswingTicksIn;
-        this.maxComboNum = maxComboNumIn;
         this.effectiveBlocks = effectiveBlocksIn;
         this.efficiency = tier.getEfficiency();
     }

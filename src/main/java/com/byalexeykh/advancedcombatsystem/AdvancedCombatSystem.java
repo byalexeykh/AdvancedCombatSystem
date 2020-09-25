@@ -1,9 +1,6 @@
 package com.byalexeykh.advancedcombatsystem;
 
-import com.byalexeykh.advancedcombatsystem.items.ACSAttributesContainer;
-import com.byalexeykh.advancedcombatsystem.items.AdvancedItems;
-import com.byalexeykh.advancedcombatsystem.items.AdvancedSwordItem;
-import com.byalexeykh.advancedcombatsystem.items.AdvancedTiredItem;
+import com.byalexeykh.advancedcombatsystem.items.*;
 import com.byalexeykh.advancedcombatsystem.networking.NetworkHandler;
 import com.byalexeykh.advancedcombatsystem.networking.messages.MessageDestroyBlock;
 import com.byalexeykh.advancedcombatsystem.networking.messages.MessageSwing;
@@ -19,9 +16,11 @@ import net.minecraft.entity.SharedMonsterAttributes;
 import net.minecraft.entity.ai.attributes.AttributeModifier;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.entity.projectile.ProjectileHelper;
-import net.minecraft.item.*;
+import net.minecraft.item.HoeItem;
+import net.minecraft.item.Item;
+import net.minecraft.item.ItemStack;
+import net.minecraft.item.SwordItem;
 import net.minecraft.particles.ParticleTypes;
-import net.minecraft.util.Hand;
 import net.minecraft.util.SoundEvents;
 import net.minecraft.util.math.*;
 import net.minecraft.world.World;
@@ -31,7 +30,6 @@ import net.minecraftforge.api.distmarker.OnlyIn;
 import net.minecraftforge.client.settings.KeyConflictContext;
 import net.minecraftforge.client.settings.KeyModifier;
 import net.minecraftforge.common.MinecraftForge;
-import net.minecraftforge.event.RegistryEvent;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
 import net.minecraftforge.fml.RegistryObject;
 import net.minecraftforge.fml.client.registry.ClientRegistry;
@@ -47,8 +45,6 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.lwjgl.glfw.GLFW;
 
-import java.util.Arrays;
-import java.util.List;
 import java.util.UUID;
 import java.util.function.Predicate;
 
@@ -106,6 +102,7 @@ public class AdvancedCombatSystem
     }
 
     @SubscribeEvent
+    @OnlyIn(Dist.DEDICATED_SERVER)
     public void onServerSetup(FMLDedicatedServerSetupEvent event){
         LOGGER.log(Level.INFO, "Server setup for Advanced Combat System...");
         new NetworkHandler();
@@ -114,8 +111,8 @@ public class AdvancedCombatSystem
     public static final String MODID = "advancedcombatsystem";
     private static Logger LOGGER = LogManager.getLogger();
 
-    private static UUID DEFAULT_REDUCE_SPEED_UUID = UUID.randomUUID();
-    public static AttributeModifier DEFAULT_REDUCE_SPEED = new AttributeModifier(DEFAULT_REDUCE_SPEED_UUID, "ASCReduceSpeed", -0.03d, AttributeModifier.Operation.ADDITION);
+    //private static UUID DEFAULT_REDUCE_SPEED_UUID = UUID.randomUUID();
+    //public static AttributeModifier DEFAULT_REDUCE_SPEED = new AttributeModifier(DEFAULT_REDUCE_SPEED_UUID, "ASCReduceSpeed", -0.03d, AttributeModifier.Operation.ADDITION);
 
 
     public static float calculateDamage(float ticksSinceLMBPressed, PlayerEntity player, Entity targetEntity){
@@ -237,16 +234,14 @@ public class AdvancedCombatSystem
             );
 
             if (blockTrace.getType() == RayTraceResult.Type.BLOCK) {
-                Block hittedBlock = world.getBlockState(blockTrace.getPos()).getBlock();
-                if ((itemToHitWith.getItem() instanceof SwordItem || itemToHitWith.getItem() instanceof HoeItem) && !player.isSwimming()) {
-                    if (hittedBlock instanceof LeavesBlock || hittedBlock instanceof TallGrassBlock || hittedBlock instanceof TallFlowerBlock) {
-                        try{
-                            MessageDestroyBlock messageDestroyBlock = new MessageDestroyBlock(blockTrace.getPos());
-                            NetworkHandler.INSTANCE.sendToServer(messageDestroyBlock);
-                        }
-                        catch (Exception e){
-                            LOGGER.error("[ACS] Exception while constructing and sending MessageDestroyBlock to server: " + e);
-                        }
+                BlockState hittedBlock = world.getBlockState(blockTrace.getPos());
+                if (ACSAttributesContainer.canDestroyBySwing(itemToHitWith.getItem(), hittedBlock)) {
+                    try{
+                        MessageDestroyBlock messageDestroyBlock = new MessageDestroyBlock(blockTrace.getPos());
+                        NetworkHandler.INSTANCE.sendToServer(messageDestroyBlock);
+                    }
+                    catch (Exception e){
+                        LOGGER.error("[ACS] Exception while constructing and sending MessageDestroyBlock to server: " + e);
                     }
                 }
             }

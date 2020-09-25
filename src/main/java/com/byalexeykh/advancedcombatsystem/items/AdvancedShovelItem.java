@@ -25,8 +25,8 @@ public class AdvancedShovelItem extends AdvancedToolItem {
     /** Map used to lookup shovel right click interactions */
     protected static final Map<Block, BlockState> SHOVEL_LOOKUP = Maps.newHashMap(ImmutableMap.of(Blocks.GRASS_BLOCK, Blocks.GRASS_PATH.getDefaultState()));
 
-    public AdvancedShovelItem(IItemTier tier, float attackDamageIn, float angleIn, float rangeIn, float neededBackswingTicksIn, float minBackswingTicksIn, int maxComboNumIn, Properties builder) {
-        super(tier, attackDamageIn, EFFECTIVE_ON, angleIn, rangeIn, neededBackswingTicksIn, minBackswingTicksIn, maxComboNumIn, builder);
+    public AdvancedShovelItem(IItemTier tier, float attackDamageIn, float angleIn, float rangeIn, float neededBackswingTicksIn, float minBackswingTicksIn, int maxComboNumIn, double speedReduceModifierIn, Properties builder) {
+        super(tier, attackDamageIn, EFFECTIVE_ON, angleIn, rangeIn, neededBackswingTicksIn, minBackswingTicksIn, maxComboNumIn, speedReduceModifierIn, builder);
     }
 
 

@@ -1,14 +1,14 @@
 modLoader="javafml" #mandatory
 loaderVersion="[31,)" #mandatory This is typically bumped every Minecraft version by Forge. See our download page for lists of versions.
-# issueTrackerURL="http://my.issue.tracker/" #optional
+issueTrackerURL="https://github.com/byalexeykh/AdvancedCombatSystem/issues" #optional
+logoFile="logo.png" #optional
 [[mods]] #mandatory
 modId="advancedcombatsystem" #mandatory
-version="0.1.2" #mandatory
+version="0.1.5" #mandatory
 displayName="Advanced Combat System" #mandatory
 # updateJSONURL="" #optional
-# displayURL="http://parasha.net/" #optional
-logoFile="examplemod.png" #optional
-credits="byalexeykh aka Epic_Slime" #optional
+displayURL="https://www.curseforge.com/minecraft/mc-mods/advanced-combat-system" #optional
+credits="-" #optional
 authors="byalexeykh aka Epic_Slime" #optional
 description='''
 Deepening and complicating the combat system by adding new and replacing old mechanics.

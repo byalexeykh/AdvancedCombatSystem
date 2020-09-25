@@ -6,6 +6,7 @@ import com.byalexeykh.advancedcombatsystem.items.AdvancedTiredItem;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.settings.AttackIndicatorStatus;
 import net.minecraft.entity.SharedMonsterAttributes;
+import net.minecraft.entity.ai.attributes.AttributeModifier;
 import net.minecraft.item.Item;
 import net.minecraft.util.Hand;
 import net.minecraft.util.math.RayTraceResult;
@@ -20,6 +21,8 @@ import net.minecraftforge.fml.common.Mod;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
+import java.util.UUID;
+
 @Mod.EventBusSubscriber(bus = Mod.EventBusSubscriber.Bus.MOD, modid = "advancedcombatsystem", value = Dist.CLIENT)
 public class ACSInputHandler {
 
@@ -33,10 +36,11 @@ public class ACSInputHandler {
     private static float neededBackswingTicks = 0, minBackswingTicks = 0;
     private static float ticksLMBPressed = 0;
     private static float ticksCanComboInit = 30, ticksCanComboCurrent = 0, ticksCanCombo = ticksCanComboInit;
-    private static float comboComplicationDelta = 0.2f, comboTimerInit = 8, comboTimerCurrent = 0;
+    private static float comboComplicationDelta = 0.2f, comboTimerInit = 5, comboTimerCurrent = 0;
     private static float dashTimerInit = 70, dashTimerCurrent = 0;
     private static int comboNum = 0, combosAvailable = 4;
     private static Minecraft mc;
+    private static UUID REDUCE_SPEED_UUID = UUID.randomUUID();
 
     public ACSInputHandler(){
         MinecraftForge.EVENT_BUS.register(this);
@@ -94,6 +98,7 @@ public class ACSInputHandler {
         }
         else if(event.phase == TickEvent.Phase.END && event.player.world.isRemote){
             // while LMB down ==========================================================================================
+            AttributeModifier REDUCE_SPEED = new AttributeModifier(REDUCE_SPEED_UUID, "ASCReduceSpeed", ACSAttributesContainer.get(mc.player.getHeldItemMainhand().getItem()).SPEED_REDUCE_MODIFIER, AttributeModifier.Operation.ADDITION);
             if(mc.gameSettings.keyBindAttack.isKeyDown()){
                 isMouseLeftKeyPressed = true;
                 isMouseLeftKeyUp = false;
@@ -118,8 +123,8 @@ public class ACSInputHandler {
                         isComboAvailable = false;
                         ACSGuiHandler.drawComboIndicator = false;
                         mc.player.setSprinting(false);
-                        if(!mc.player.getAttribute(SharedMonsterAttributes.MOVEMENT_SPEED).hasModifier(AdvancedCombatSystem.DEFAULT_REDUCE_SPEED) && mc.player.getHeldItemMainhand().getItem() instanceof AdvancedTiredItem){
-                            mc.player.getAttribute(SharedMonsterAttributes.MOVEMENT_SPEED).applyModifier(AdvancedCombatSystem.DEFAULT_REDUCE_SPEED);
+                        if(!mc.player.getAttribute(SharedMonsterAttributes.MOVEMENT_SPEED).hasModifier(REDUCE_SPEED) && mc.player.getHeldItemMainhand().getItem() instanceof AdvancedTiredItem){
+                            mc.player.getAttribute(SharedMonsterAttributes.MOVEMENT_SPEED).applyModifier(REDUCE_SPEED);
                         }
                     }
                 }
@@ -130,8 +135,8 @@ public class ACSInputHandler {
 
             // on LMB up ===============================================================================================
             if (!isMouseLeftKeyPressed && MouseLeftKeyLastValue) {
-                if(mc.player.getAttribute(SharedMonsterAttributes.MOVEMENT_SPEED).hasModifier(AdvancedCombatSystem.DEFAULT_REDUCE_SPEED)){
-                    mc.player.getAttribute(SharedMonsterAttributes.MOVEMENT_SPEED).removeModifier(AdvancedCombatSystem.DEFAULT_REDUCE_SPEED);
+                if(mc.player.getAttribute(SharedMonsterAttributes.MOVEMENT_SPEED).hasModifier(REDUCE_SPEED)){
+                    mc.player.getAttribute(SharedMonsterAttributes.MOVEMENT_SPEED).removeModifier(REDUCE_SPEED);
                 }
 
                 if(ticksLMBPressed >= minBackswingTicks){

@@ -14,6 +14,7 @@ public class AdvancedItems {
             16,
             5,
             4,
+            -0.01d,
             new Item.Properties().group(ItemGroup.COMBAT).maxStackSize(1)
     );
 
@@ -25,6 +26,7 @@ public class AdvancedItems {
             16,
             5,
             4,
+            -0.01d,
             new Item.Properties().group(ItemGroup.COMBAT).maxStackSize(1)
     );
 
@@ -36,6 +38,7 @@ public class AdvancedItems {
             16,
             5,
             4,
+            -0.01d,
             new Item.Properties().group(ItemGroup.COMBAT).maxStackSize(1)
     );
 
@@ -47,6 +50,7 @@ public class AdvancedItems {
             16,
             5,
             4,
+            -0.01d,
             new Item.Properties().group(ItemGroup.COMBAT).maxStackSize(1)
     );
 
@@ -58,6 +62,7 @@ public class AdvancedItems {
             16,
             5,
             4,
+            -0.01d,
             new Item.Properties().group(ItemGroup.COMBAT).maxStackSize(1)
     );
 
@@ -70,6 +75,7 @@ public class AdvancedItems {
             30,
             10,
             2,
+            -0.035d,
             new Item.Properties().group(ItemGroup.TOOLS)
     );
 
@@ -82,6 +88,7 @@ public class AdvancedItems {
             30,
             10,
             2,
+            -0.035d,
             new Item.Properties().group(ItemGroup.TOOLS)
     );
 
@@ -93,6 +100,7 @@ public class AdvancedItems {
             30,
             10,
             2,
+            -0.035d,
             new Item.Properties().group(ItemGroup.TOOLS)
     );
 
@@ -104,6 +112,7 @@ public class AdvancedItems {
             30,
             10,
             2,
+            -0.035d,
             new Item.Properties().group(ItemGroup.TOOLS)
     );
 
@@ -115,6 +124,7 @@ public class AdvancedItems {
             30,
             10,
             2,
+            -0.035d,
             new Item.Properties().group(ItemGroup.TOOLS)
     );
 
@@ -126,6 +136,7 @@ public class AdvancedItems {
             20,
             8,
             2,
+            -0.025d,
             new Item.Properties().group(ItemGroup.TOOLS)
     );
 
@@ -136,6 +147,7 @@ public class AdvancedItems {
             20,
             8,
             2,
+            -0.025d,
             new Item.Properties().group(ItemGroup.TOOLS)
     );
 
@@ -146,6 +158,7 @@ public class AdvancedItems {
             20,
             8,
             2,
+            -0.025d,
             new Item.Properties().group(ItemGroup.TOOLS)
     );
 
@@ -156,6 +169,7 @@ public class AdvancedItems {
             20,
             8,
             2,
+            -0.025d,
             new Item.Properties().group(ItemGroup.TOOLS)
     );
 
@@ -166,6 +180,7 @@ public class AdvancedItems {
             20,
             8,
             2,
+            -0.025d,
             new Item.Properties().group(ItemGroup.TOOLS)
     );
 
@@ -178,6 +193,7 @@ public class AdvancedItems {
             20,
             7,
             2,
+            -0.025d,
             new Item.Properties().group(ItemGroup.TOOLS)
     );
 
@@ -189,6 +205,7 @@ public class AdvancedItems {
             20,
             7,
             2,
+            -0.025d,
             new Item.Properties().group(ItemGroup.TOOLS)
     );
 
@@ -200,6 +217,7 @@ public class AdvancedItems {
             20,
             7,
             2,
+            -0.025d,
             new Item.Properties().group(ItemGroup.TOOLS)
     );
 
@@ -211,6 +229,7 @@ public class AdvancedItems {
             20,
             7,
             2,
+            -0.025d,
             new Item.Properties().group(ItemGroup.TOOLS)
     );
 
@@ -222,6 +241,7 @@ public class AdvancedItems {
             20,
             7,
             2,
+            -0.025d,
             new Item.Properties().group(ItemGroup.TOOLS)
     );
 
@@ -234,6 +254,7 @@ public class AdvancedItems {
             20,
             6,
             3,
+            -0.025d,
             new Item.Properties().group(ItemGroup.TOOLS)
     );
 
@@ -245,6 +266,7 @@ public class AdvancedItems {
             20,
             6,
             3,
+            -0.025d,
             new Item.Properties().group(ItemGroup.TOOLS)
     );
 
@@ -256,6 +278,7 @@ public class AdvancedItems {
             20,
             6,
             3,
+            -0.025d,
             new Item.Properties().group(ItemGroup.TOOLS)
     );
 
@@ -267,6 +290,7 @@ public class AdvancedItems {
             20,
             6,
             3,
+            -0.025d,
             new Item.Properties().group(ItemGroup.TOOLS)
     );
 
@@ -278,6 +302,7 @@ public class AdvancedItems {
             20,
             6,
             3,
+            -0.025d,
             new Item.Properties().group(ItemGroup.TOOLS)
     );
 }
