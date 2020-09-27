@@ -180,9 +180,6 @@ public class AdvancedCombatSystem
         CrosshairZenith = player.getPitchYaw().x;
         CrosshairAzimuth = player.getPitchYaw().y;
 
-        System.out.println();
-
-
         // Calculating starting point from where calculations will began ===============================================
         double startAzimuth = CrosshairAzimuth + (angle / 2);
         double x, y, z;

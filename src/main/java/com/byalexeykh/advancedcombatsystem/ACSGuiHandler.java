@@ -4,7 +4,6 @@ import com.byalexeykh.advancedcombatsystem.items.ACSAttributesContainer;
 import com.byalexeykh.advancedcombatsystem.items.AdvancedSwordItem;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.AbstractGui;
-import net.minecraft.item.SwordItem;
 import net.minecraft.util.Hand;
 import net.minecraft.util.ResourceLocation;
 import net.minecraft.util.math.RayTraceResult;
@@ -41,7 +40,7 @@ public class ACSGuiHandler extends AbstractGui {
             screenHeight = event.getWindow().getScaledHeight();
             screenWidth = event.getWindow().getScaledWidth();
             BackswingX = (screenWidth / 2) - (bar_width / 2);
-            BackswingY = (screenHeight / 2) + 6;
+            BackswingY = (screenHeight / 2) + 7;
 
             // Draw backswing indicator ================================================================================
             if(mc.player.getHeldItem(Hand.MAIN_HAND).getItem() instanceof AdvancedSwordItem || mc.objectMouseOver.getType() == RayTraceResult.Type.ENTITY || ACSInputHandler.isAccumulatingPower || ACSInputHandler.isBattleMode)

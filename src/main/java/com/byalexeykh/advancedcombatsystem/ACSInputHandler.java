@@ -144,7 +144,7 @@ public class ACSInputHandler {
                     boolean isBlocking = mc.player.isActiveItemStackBlocking();
                     //LOGGER.warn("isBlocking = " + isBlocking);
                     if((isAimingAtBlock && !isHoldingSword) && !isBattleMode || isBlocking){
-                        ticksLMBPressed = 0;
+                        ticksLMBPressed = 0; // TODO make resetVariables() func
                         ticksCanCombo = ticksCanComboInit;
                         comboTimerCurrent = 0;
                         comboNum = 0;

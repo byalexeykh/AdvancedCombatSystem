@@ -5,7 +5,7 @@ import net.minecraft.item.ItemGroup;
 import net.minecraft.item.ItemTier;
 
 public class AdvancedItems {
-    // SWORDS
+    // SWORDS ==========================================================================================================
     public static final Item wooden_sword = new AdvancedSwordItem(
             ItemTier.WOOD,
             3,
@@ -66,7 +66,7 @@ public class AdvancedItems {
             new Item.Properties().group(ItemGroup.COMBAT).maxStackSize(1)
     );
 
-    // AXEs
+    // AXEs ============================================================================================================
     public static final Item wooden_axe = new AdvancedAxeItem(
             ItemTier.WOOD,
             6,
@@ -128,7 +128,7 @@ public class AdvancedItems {
             new Item.Properties().group(ItemGroup.TOOLS)
     );
 
-    // HOEs
+    // HOEs ============================================================================================================
     public static final Item wooden_hoe = new AdvancedHoeItem(
             ItemTier.WOOD,
             70,
@@ -184,7 +184,7 @@ public class AdvancedItems {
             new Item.Properties().group(ItemGroup.TOOLS)
     );
 
-    //PICKAXEs
+    // PICKAXEs ========================================================================================================
     public static final Item wooden_pickaxe = new AdvancedPickaxeItem(
             ItemTier.WOOD,
             1,
@@ -245,7 +245,7 @@ public class AdvancedItems {
             new Item.Properties().group(ItemGroup.TOOLS)
     );
 
-    //SHOVELs
+    // SHOVELs =========================================================================================================
     public static final Item wooden_shovel = new AdvancedShovelItem(
             ItemTier.WOOD,
             1.5f,
