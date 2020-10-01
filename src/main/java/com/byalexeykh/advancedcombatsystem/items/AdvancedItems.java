@@ -1,8 +1,14 @@
 package com.byalexeykh.advancedcombatsystem.items;
 
+import com.byalexeykh.advancedcombatsystem.AdvancedCombatSystem;
+import com.byalexeykh.advancedcombatsystem.entities.AdvancedEntities;
+import com.byalexeykh.advancedcombatsystem.entities.SkeletonWarriorEntity;
+import net.minecraft.entity.EntityClassification;
+import net.minecraft.entity.EntityType;
 import net.minecraft.item.Item;
 import net.minecraft.item.ItemGroup;
 import net.minecraft.item.ItemTier;
+import net.minecraft.item.SpawnEggItem;
 
 public class AdvancedItems {
     // SWORDS ==========================================================================================================
@@ -15,6 +21,7 @@ public class AdvancedItems {
             5,
             4,
             -0.01d,
+            0.2f,
             new Item.Properties().group(ItemGroup.COMBAT).maxStackSize(1)
     );
 
@@ -27,6 +34,7 @@ public class AdvancedItems {
             5,
             4,
             -0.01d,
+            0.2f,
             new Item.Properties().group(ItemGroup.COMBAT).maxStackSize(1)
     );
 
@@ -39,6 +47,7 @@ public class AdvancedItems {
             5,
             4,
             -0.01d,
+            0.2f,
             new Item.Properties().group(ItemGroup.COMBAT).maxStackSize(1)
     );
 
@@ -51,6 +60,7 @@ public class AdvancedItems {
             5,
             4,
             -0.01d,
+            0.2f,
             new Item.Properties().group(ItemGroup.COMBAT).maxStackSize(1)
     );
 
@@ -63,6 +73,7 @@ public class AdvancedItems {
             5,
             4,
             -0.01d,
+            0.2f,
             new Item.Properties().group(ItemGroup.COMBAT).maxStackSize(1)
     );
 
@@ -76,6 +87,7 @@ public class AdvancedItems {
             10,
             2,
             -0.035d,
+            0.2f,
             new Item.Properties().group(ItemGroup.TOOLS)
     );
 
@@ -89,6 +101,7 @@ public class AdvancedItems {
             10,
             2,
             -0.035d,
+            0.2f,
             new Item.Properties().group(ItemGroup.TOOLS)
     );
 
@@ -101,6 +114,7 @@ public class AdvancedItems {
             10,
             2,
             -0.035d,
+            0.2f,
             new Item.Properties().group(ItemGroup.TOOLS)
     );
 
@@ -113,6 +127,7 @@ public class AdvancedItems {
             10,
             2,
             -0.035d,
+            0.2f,
             new Item.Properties().group(ItemGroup.TOOLS)
     );
 
@@ -125,6 +140,7 @@ public class AdvancedItems {
             10,
             2,
             -0.035d,
+            0.2f,
             new Item.Properties().group(ItemGroup.TOOLS)
     );
 
@@ -137,6 +153,7 @@ public class AdvancedItems {
             8,
             2,
             -0.025d,
+            0.2f,
             new Item.Properties().group(ItemGroup.TOOLS)
     );
 
@@ -148,6 +165,7 @@ public class AdvancedItems {
             8,
             2,
             -0.025d,
+            0.2f,
             new Item.Properties().group(ItemGroup.TOOLS)
     );
 
@@ -159,6 +177,7 @@ public class AdvancedItems {
             8,
             2,
             -0.025d,
+            0.2f,
             new Item.Properties().group(ItemGroup.TOOLS)
     );
 
@@ -170,6 +189,7 @@ public class AdvancedItems {
             8,
             2,
             -0.025d,
+            0.2f,
             new Item.Properties().group(ItemGroup.TOOLS)
     );
 
@@ -181,6 +201,7 @@ public class AdvancedItems {
             8,
             2,
             -0.025d,
+            0.2f,
             new Item.Properties().group(ItemGroup.TOOLS)
     );
 
@@ -194,6 +215,7 @@ public class AdvancedItems {
             7,
             2,
             -0.025d,
+            0.2f,
             new Item.Properties().group(ItemGroup.TOOLS)
     );
 
@@ -206,6 +228,7 @@ public class AdvancedItems {
             7,
             2,
             -0.025d,
+            0.2f,
             new Item.Properties().group(ItemGroup.TOOLS)
     );
 
@@ -218,6 +241,7 @@ public class AdvancedItems {
             7,
             2,
             -0.025d,
+            0.2f,
             new Item.Properties().group(ItemGroup.TOOLS)
     );
 
@@ -230,6 +254,7 @@ public class AdvancedItems {
             7,
             2,
             -0.025d,
+            0.2f,
             new Item.Properties().group(ItemGroup.TOOLS)
     );
 
@@ -242,6 +267,7 @@ public class AdvancedItems {
             7,
             2,
             -0.025d,
+            0.2f,
             new Item.Properties().group(ItemGroup.TOOLS)
     );
 
@@ -255,6 +281,7 @@ public class AdvancedItems {
             6,
             3,
             -0.025d,
+            0.2f,
             new Item.Properties().group(ItemGroup.TOOLS)
     );
 
@@ -267,6 +294,7 @@ public class AdvancedItems {
             6,
             3,
             -0.025d,
+            0.2f,
             new Item.Properties().group(ItemGroup.TOOLS)
     );
 
@@ -279,6 +307,7 @@ public class AdvancedItems {
             6,
             3,
             -0.025d,
+            0.2f,
             new Item.Properties().group(ItemGroup.TOOLS)
     );
 
@@ -291,6 +320,7 @@ public class AdvancedItems {
             6,
             3,
             -0.025d,
+            0.2f,
             new Item.Properties().group(ItemGroup.TOOLS)
     );
 
@@ -303,6 +333,15 @@ public class AdvancedItems {
             6,
             3,
             -0.025d,
+            0.2f,
             new Item.Properties().group(ItemGroup.TOOLS)
+    );
+
+    // SPAWN EGGS ======================================================================================================
+    public static final Item skeleton_warrior_spawnegg = new SpawnEggItem(
+            AdvancedEntities.skeleton_warrior,
+            123,
+            157,
+            new Item.Properties().group(ItemGroup.MISC)
     );
 }

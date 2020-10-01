@@ -1,6 +1,5 @@
 package com.byalexeykh.advancedcombatsystem.networking;
 
-import com.byalexeykh.advancedcombatsystem.AdvancedCombatSystem;
 import com.byalexeykh.advancedcombatsystem.networking.messages.MessageDestroyBlock;
 import com.byalexeykh.advancedcombatsystem.networking.messages.MessageSwing;
 import com.byalexeykh.advancedcombatsystem.networking.messages.MessageSwingEffects;
@@ -8,13 +7,14 @@ import net.minecraft.entity.Entity;
 import net.minecraft.entity.player.ServerPlayerEntity;
 import net.minecraft.inventory.EquipmentSlotType;
 import net.minecraft.util.DamageSource;
-import net.minecraft.util.Hand;
 import net.minecraft.util.SoundEvents;
+import net.minecraft.util.math.Vec3d;
 import net.minecraft.world.World;
 import net.minecraftforge.fml.LogicalSide;
 import net.minecraftforge.fml.network.NetworkEvent;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+
 import java.util.function.Supplier;
 
 import static com.byalexeykh.advancedcombatsystem.AdvancedCombatSystem.calculateDamage;
@@ -54,7 +54,8 @@ public class ServerMessagesHandler {
                 LOGGER.error("[ACS-server] ERROR while executing attackEntityFrom: " + e + " | player: " + player + " | message: " + msg + " | entityToHit: " + entityToHit);
             }
             if(player.isSprinting()){
-                entityToHit.addVelocity((entityToHit.getPosX() - player.getPosX()) / 1.3, (entityToHit.getPosX() - player.getPosYEye()) / 1.3, (entityToHit.getPosZ() - player.getPosZ()) / 1.3);
+                Vec3d fromPlayerToEntity = new Vec3d(entityToHit.getPosX() - player.getPosX(), entityToHit.getPosY() - player.getPosYEye(), entityToHit.getPosZ() - player.getPosZ()).normalize();
+                entityToHit.addVelocity(fromPlayerToEntity.x / 6, fromPlayerToEntity.y / 6, fromPlayerToEntity.z / 6);
             }
 
             player.getHeldItemMainhand().damageItem(1, player, PlayerEntity -> {PlayerEntity.sendBreakAnimation(EquipmentSlotType.MAINHAND);});

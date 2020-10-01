@@ -1,5 +1,7 @@
 package com.byalexeykh.advancedcombatsystem;
 
+import com.byalexeykh.advancedcombatsystem.entities.AdvancedEntities;
+import com.byalexeykh.advancedcombatsystem.entities.SkeletonWarriorEntity;
 import com.byalexeykh.advancedcombatsystem.items.*;
 import com.byalexeykh.advancedcombatsystem.networking.NetworkHandler;
 import com.byalexeykh.advancedcombatsystem.networking.messages.MessageDestroyBlock;
@@ -9,17 +11,11 @@ import net.minecraft.block.*;
 import net.minecraft.client.settings.KeyBinding;
 import net.minecraft.client.util.InputMappings;
 import net.minecraft.enchantment.EnchantmentHelper;
-import net.minecraft.entity.CreatureAttribute;
-import net.minecraft.entity.Entity;
-import net.minecraft.entity.LivingEntity;
-import net.minecraft.entity.SharedMonsterAttributes;
+import net.minecraft.entity.*;
 import net.minecraft.entity.ai.attributes.AttributeModifier;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.entity.projectile.ProjectileHelper;
-import net.minecraft.item.HoeItem;
-import net.minecraft.item.Item;
-import net.minecraft.item.ItemStack;
-import net.minecraft.item.SwordItem;
+import net.minecraft.item.*;
 import net.minecraft.particles.ParticleTypes;
 import net.minecraft.util.SoundEvents;
 import net.minecraft.util.math.*;
@@ -31,9 +27,11 @@ import net.minecraftforge.client.settings.KeyConflictContext;
 import net.minecraftforge.client.settings.KeyModifier;
 import net.minecraftforge.common.MinecraftForge;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
+import net.minecraftforge.fml.ModLoadingContext;
 import net.minecraftforge.fml.RegistryObject;
 import net.minecraftforge.fml.client.registry.ClientRegistry;
 import net.minecraftforge.fml.common.Mod;
+import net.minecraftforge.fml.config.ModConfig;
 import net.minecraftforge.fml.event.lifecycle.FMLClientSetupEvent;
 import net.minecraftforge.fml.event.lifecycle.FMLDedicatedServerSetupEvent;
 import net.minecraftforge.fml.javafmlmod.FMLJavaModLoadingContext;
@@ -51,9 +49,6 @@ import java.util.function.Predicate;
 @Mod("advancedcombatsystem")
 public class AdvancedCombatSystem
 {
-
-    public static final String MOD_ID = "advancedcombatsystem";
-
     private static final DeferredRegister<Item> ITEMS = DeferredRegister.create(ForgeRegistries.ITEMS, "minecraft");
     public static final RegistryObject<Item> WOODEN_SWORD = ITEMS.register("wooden_sword", () -> AdvancedItems.wooden_sword);
     public static final RegistryObject<Item> GOLDEN_SWORD = ITEMS.register("golden_sword", () -> AdvancedItems.golden_sword);
@@ -80,6 +75,12 @@ public class AdvancedCombatSystem
     public static final RegistryObject<Item> STONE_SHOVEL = ITEMS.register("stone_shovel", () -> AdvancedItems.stone_shovel);
     public static final RegistryObject<Item> IRON_SHOVEL = ITEMS.register("iron_shovel", () -> AdvancedItems.iron_shovel);
     public static final RegistryObject<Item> DIAMOND_SHOVEL = ITEMS.register("diamond_shovel", () -> AdvancedItems.diamond_shovel);
+
+    private static final DeferredRegister<EntityType<?>> MOD_ENTITIES = DeferredRegister.create(ForgeRegistries.ENTITIES, AdvancedCombatSystem.MODID);
+    //public static final RegistryObject<EntityType<SkeletonWarriorEntity>> SKELETON_WARRIOR = MOD_ENTITIES.register("skeleton_warrior", () -> AdvancedEntities.skeleton_warrior);
+
+    private static final DeferredRegister<Item> MOD_ITEMS = DeferredRegister.create(ForgeRegistries.ITEMS, AdvancedCombatSystem.MODID);
+    public static final RegistryObject<Item> SKELETON_WARRIOR_SPAWNEGG = MOD_ITEMS.register("skeleton_warrior_spawnegg", () -> AdvancedItems.skeleton_warrior_spawnegg);
 
     public AdvancedCombatSystem(){
         MinecraftForge.EVENT_BUS.register(this);
@@ -111,10 +112,6 @@ public class AdvancedCombatSystem
     public static final String MODID = "advancedcombatsystem";
     private static Logger LOGGER = LogManager.getLogger();
 
-    //private static UUID DEFAULT_REDUCE_SPEED_UUID = UUID.randomUUID();
-    //public static AttributeModifier DEFAULT_REDUCE_SPEED = new AttributeModifier(DEFAULT_REDUCE_SPEED_UUID, "ASCReduceSpeed", -0.03d, AttributeModifier.Operation.ADDITION);
-
-
     public static float calculateDamage(float ticksSinceLMBPressed, PlayerEntity player, Entity targetEntity){
         float BackswingProgress;
         float basicDamage;
@@ -125,7 +122,8 @@ public class AdvancedCombatSystem
         boolean isSprinting = player.isSprinting();
         ACSAttributesContainer acsAttributesContainer = ACSAttributesContainer.get(player.getHeldItemMainhand().getItem());
 
-        basicDamage = (float)player.getAttribute(SharedMonsterAttributes.ATTACK_DAMAGE).getValue();
+        basicDamage = (float)player.getAttribute(SharedMonsterAttributes.ATTACK_DAMAGE).getValue(); //TODO take basic damage from item
+
         float f1;
         if (targetEntity instanceof LivingEntity) {
             f1 = EnchantmentHelper.getModifierForCreature(player.getHeldItemMainhand(), ((LivingEntity)targetEntity).getCreatureAttribute());

@@ -10,20 +10,22 @@ public class ACSAttributesContainer {
     public static float MIN_BACKSWING_TICKS;
     public static int MAX_COMBO_NUM;
     public final double SPEED_REDUCE_MODIFIER;
-    public ACSAttributesContainer(float angle, float range, float neededBackswingTicks, float minBackswingTicks, int maxComboNum, double speedReduceModifier){
+    public final float COMBO_CHARGING_ACCELERATOR;
+    public ACSAttributesContainer(float angle, float range, float neededBackswingTicks, float minBackswingTicks, int maxComboNum, double speedReduceModifier, float comboChargingAccelerator){
         this.ANGLE = angle;
         this.RANGE = range;
         this.NEEDED_BACKSWING_TICKS = neededBackswingTicks;
         this.MIN_BACKSWING_TICKS = minBackswingTicks;
         this.MAX_COMBO_NUM = maxComboNum;
         this.SPEED_REDUCE_MODIFIER = speedReduceModifier;
+        this.COMBO_CHARGING_ACCELERATOR = comboChargingAccelerator;
     }
 
     /**
      * returns default ACS attributes container
      * */
     public static ACSAttributesContainer getDefaultContainer(){
-        return new ACSAttributesContainer(30, 6, 6, 3, 6, -0.03d);
+        return new ACSAttributesContainer(30, 6, 6, 3, 6, -0.03d, 0);
     }
 
     public static boolean canDestroyBySwing(Item item, BlockState block){

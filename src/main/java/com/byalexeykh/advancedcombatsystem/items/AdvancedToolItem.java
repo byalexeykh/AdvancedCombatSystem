@@ -1,8 +1,12 @@
 package com.byalexeykh.advancedcombatsystem.items;
 
+import com.google.common.collect.HashMultimap;
+import com.google.common.collect.Multimap;
 import net.minecraft.block.Block;
 import net.minecraft.block.BlockState;
 import net.minecraft.entity.LivingEntity;
+import net.minecraft.entity.SharedMonsterAttributes;
+import net.minecraft.entity.ai.attributes.AttributeModifier;
 import net.minecraft.inventory.EquipmentSlotType;
 import net.minecraft.item.IItemTier;
 import net.minecraft.item.ItemStack;
@@ -15,11 +19,15 @@ public class AdvancedToolItem extends AdvancedTiredItem {
     private final Set<Block> effectiveBlocks;
     protected final float efficiency;
     private final float attackDamage;
-    public AdvancedToolItem(IItemTier tier, float attackDamageIn, Set<Block> effectiveBlocksIn, float angleIn, float rangeIn, float neededBackswingTicksIn, float minBackswingTicksIn, int maxComboNumIn, double speedReduceModifierIn, Properties builder) {
-        super(tier, angleIn, rangeIn, neededBackswingTicksIn, minBackswingTicksIn, maxComboNumIn, speedReduceModifierIn, builder);
+    public AdvancedToolItem(IItemTier tier, float attackDamageIn, Set<Block> effectiveBlocksIn, float angleIn, float rangeIn, float neededBackswingTicksIn, float minBackswingTicksIn, int maxComboNumIn, double speedReduceModifierIn, float comboTicksModifierIn, Properties builder) {
+        super(tier, angleIn, rangeIn, neededBackswingTicksIn, minBackswingTicksIn, maxComboNumIn, speedReduceModifierIn, comboTicksModifierIn, builder);
         this.attackDamage = attackDamageIn + tier.getAttackDamage();
         this.effectiveBlocks = effectiveBlocksIn;
         this.efficiency = tier.getEfficiency();
+    }
+
+    public float getDefaultDamage(){
+        return this.attackDamage;
     }
 
     public float getDestroySpeed(ItemStack stack, BlockState state) {
@@ -49,5 +57,17 @@ public class AdvancedToolItem extends AdvancedTiredItem {
         }
 
         return true;
+    }
+
+    /**
+     * Gets a map of item attribute modifiers, used by ItemSword to increase hit damage.
+     */
+    @Override
+    public Multimap<String, AttributeModifier> getAttributeModifiers(EquipmentSlotType equipmentSlot, ItemStack stack) {
+        Multimap<String, AttributeModifier> multimap = HashMultimap.<String, AttributeModifier>create();
+        if (equipmentSlot == EquipmentSlotType.MAINHAND) {
+            multimap.put(SharedMonsterAttributes.ATTACK_DAMAGE.getName(), new AttributeModifier(ATTACK_DAMAGE_MODIFIER, "Weapon modifier", this.attackDamage, AttributeModifier.Operation.ADDITION));
+        }
+        return multimap;
     }
 }

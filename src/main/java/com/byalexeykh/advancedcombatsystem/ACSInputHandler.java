@@ -59,6 +59,15 @@ public class ACSInputHandler {
 
     @SubscribeEvent
     @OnlyIn(Dist.CLIENT)
+    public void onPlayerScroll(InputEvent.MouseScrollEvent event){
+        isAccumulatingPower = false;
+        isComboRuined = true;
+        comboTimerCurrent = 0;
+        ticksLMBPressed = 0;
+    }
+
+    @SubscribeEvent
+    @OnlyIn(Dist.CLIENT)
     public void onLeftClick(InputEvent.ClickInputEvent event){
         RayTraceResult.Type traceType = mc.objectMouseOver.getType();
         if(isAccumulatingPower || isHoldingSword || traceType == RayTraceResult.Type.ENTITY || traceType == RayTraceResult.Type.MISS || isBattleMode){
@@ -72,195 +81,181 @@ public class ACSInputHandler {
         combosAvailable = ACSAttributesContainer.get(currentItem).MAX_COMBO_NUM;
     }
 
-    @SubscribeEvent
-    @OnlyIn(Dist.CLIENT)
-    public void onPlayerScroll(InputEvent.MouseScrollEvent event){
-        isAccumulatingPower = false;
-        isComboRuined = true;
-        comboTimerCurrent = 0;
-        ticksLMBPressed = 0;
-    }
-
-
     // Main mechanics ==================================================================================================
     @SubscribeEvent
     @OnlyIn(Dist.CLIENT)
     public void onPlayerTick(TickEvent.PlayerTickEvent event){
-        if(mc.player != null)
-        if(event.phase == TickEvent.Phase.START) {
-            if (isAccumulatingPower) {
-                event.player.isSwingInProgress = false;
-            }
-            isHoldingSword = mc.player.getHeldItem(Hand.MAIN_HAND).getItem() instanceof AdvancedSwordItem;
-            if(mc.objectMouseOver != null)
-                isAimingAtBlock = mc.objectMouseOver.getType() == RayTraceResult.Type.BLOCK;
-            mc.gameSettings.attackIndicator = AttackIndicatorStatus.OFF;
-        }
-        else if(event.phase == TickEvent.Phase.END && event.player.world.isRemote){
-            // while LMB down ==========================================================================================
-            AttributeModifier REDUCE_SPEED = new AttributeModifier(REDUCE_SPEED_UUID, "ASCReduceSpeed", ACSAttributesContainer.get(mc.player.getHeldItemMainhand().getItem()).SPEED_REDUCE_MODIFIER, AttributeModifier.Operation.ADDITION);
-            if(mc.gameSettings.keyBindAttack.isKeyDown()){
-                isMouseLeftKeyPressed = true;
-                isMouseLeftKeyUp = false;
+        if(mc.player != null) {
+            if (event.phase == TickEvent.Phase.START) {
+                isHoldingSword = mc.player.getHeldItem(Hand.MAIN_HAND).getItem() instanceof AdvancedSwordItem;
+                mc.gameSettings.attackIndicator = AttackIndicatorStatus.OFF;
+                if (isAccumulatingPower) {
+                    event.player.isSwingInProgress = false;
+                }
+                if (mc.objectMouseOver != null){
+                    isAimingAtBlock = mc.objectMouseOver.getType() == RayTraceResult.Type.BLOCK;
+                }
+            } else if (event.phase == TickEvent.Phase.END && event.player.world.isRemote) {
+                // while LMB down ======================================================================================
+                AttributeModifier REDUCE_SPEED = new AttributeModifier(REDUCE_SPEED_UUID, "ASCReduceSpeed", ACSAttributesContainer.get(mc.player.getHeldItemMainhand().getItem()).SPEED_REDUCE_MODIFIER, AttributeModifier.Operation.ADDITION);
+                if (mc.gameSettings.keyBindAttack.isKeyDown() && (!isAimingAtBlock || isHoldingSword || isBattleMode)) {
+                    isMouseLeftKeyPressed = true;
+                    isMouseLeftKeyUp = false;
 
-                if(ticksLMBPressed < neededBackswingTicks) {
-                    if(isHoldingSword || !isAimingAtBlock || isBattleMode){
+                    if (ticksLMBPressed < neededBackswingTicks) {
                         isAccumulatingPower = true;
-                        ticksLMBPressed++;
+                        ticksLMBPressed = ticksLMBPressed + 1 + ACSAttributesContainer.get(mc.player.getHeldItemMainhand().getItem()).COMBO_CHARGING_ACCELERATOR * comboNum;
                     }
-                    else{
-                        isAccumulatingPower = false;
-                    }
-                }
 
-                if(ticksLMBPressed == neededBackswingTicks){
-                    if(ticksCanComboCurrent < ticksCanCombo){
-                        isComboAvailable = true;
-                        ticksCanComboCurrent++;
-                        ACSGuiHandler.drawComboIndicator = true;
-                    }
-                    else{
-                        isComboAvailable = false;
-                        ACSGuiHandler.drawComboIndicator = false;
-                        mc.player.setSprinting(false);
-                        if(!mc.player.getAttribute(SharedMonsterAttributes.MOVEMENT_SPEED).hasModifier(REDUCE_SPEED) && mc.player.getHeldItemMainhand().getItem() instanceof AdvancedTiredItem){
-                            mc.player.getAttribute(SharedMonsterAttributes.MOVEMENT_SPEED).applyModifier(REDUCE_SPEED);
-                        }
-                    }
-                }
-            }
-            else{
-                isMouseLeftKeyPressed = false;
-            }
-
-            // on LMB up ===============================================================================================
-            if (!isMouseLeftKeyPressed && MouseLeftKeyLastValue) {
-                if(mc.player.getAttribute(SharedMonsterAttributes.MOVEMENT_SPEED).hasModifier(REDUCE_SPEED)){
-                    mc.player.getAttribute(SharedMonsterAttributes.MOVEMENT_SPEED).removeModifier(REDUCE_SPEED);
-                }
-
-                if(ticksLMBPressed >= minBackswingTicks){
-                    // Resetting values if power was accumulated but LMB was up when aiming at block
-                    boolean isBlocking = mc.player.isActiveItemStackBlocking();
-                    //LOGGER.warn("isBlocking = " + isBlocking);
-                    if((isAimingAtBlock && !isHoldingSword) && !isBattleMode || isBlocking){
-                        ticksLMBPressed = 0; // TODO make resetVariables() func
-                        ticksCanCombo = ticksCanComboInit;
-                        comboTimerCurrent = 0;
-                        comboNum = 0;
-                        isComboRuined = true;
-                        isComboAvailable = false;
-                        isComboInProgress = false;
-                        isAccumulatingPower = false;
-                        ACSGuiHandler.drawComboIndicator = false;
-                    }
-                    else{
-                        isAccumulatingPower = false;
-                        ACSGuiHandler.drawComboIndicator = false;
-                        AdvancedCombatSystem.swing(mc.player, ticksLMBPressed);
-                        mc.player.swingArm(Hand.MAIN_HAND);
-                        MouseLeftKeyLastValue = isMouseLeftKeyPressed;
-
-                        // Combo processing ============================================================================
-                        if(isComboAvailable){
-                            ticksCanComboCurrent = 0;
-                            ticksLMBPressed = 0;
-                            comboNum++;
-                            if(comboNum > combosAvailable){
-                                comboTimerCurrent = 0;
-                                comboNum = 0;
-                                ticksLMBPressed = neededBackswingTicks - 1;
-                                isComboRuined = true;
-                                isComboAvailable = false;
-                                isComboInProgress = false;
-                                ticksCanCombo = ticksCanComboInit;
-                                //LOGGER.warn("Maximum combo reached!");
-                            }else{
-                                comboTimerCurrent = 0;
-                                isComboRuined = false;
-                                isComboAvailable = false;
-                                isComboInProgress = true;
-                                ticksCanCombo = ticksCanComboInit * (float)(Math.pow(comboComplicationDelta, comboNum));
-                                //LOGGER.warn("Combo passed! new combo window: " + ticksCanCombo);
-                                ACSGuiHandler.drawComboPassedIndicator = true;
+                    if (ticksLMBPressed >= neededBackswingTicks) {
+                        if (ticksCanComboCurrent < ticksCanCombo) {
+                            isComboAvailable = true;
+                            ticksCanComboCurrent++;
+                            ACSGuiHandler.drawComboIndicator = true;
+                        } else {
+                            isComboAvailable = false;
+                            ACSGuiHandler.drawComboIndicator = false;
+                            mc.player.setSprinting(false);
+                            if (!mc.player.getAttribute(SharedMonsterAttributes.MOVEMENT_SPEED).hasModifier(REDUCE_SPEED) && mc.player.getHeldItemMainhand().getItem() instanceof AdvancedTiredItem) {
+                                mc.player.getAttribute(SharedMonsterAttributes.MOVEMENT_SPEED).applyModifier(REDUCE_SPEED);
                             }
                         }
-                        else{
+                    }
+                } else {
+                    isAccumulatingPower = false;
+                    isMouseLeftKeyPressed = false;
+                }
+
+                // on LMB up ===========================================================================================
+                if (!isMouseLeftKeyPressed && MouseLeftKeyLastValue) {
+                    if (mc.player.getAttribute(SharedMonsterAttributes.MOVEMENT_SPEED).hasModifier(REDUCE_SPEED)) {
+                        mc.player.getAttribute(SharedMonsterAttributes.MOVEMENT_SPEED).removeModifier(REDUCE_SPEED);
+                    }
+
+                    if (ticksLMBPressed >= minBackswingTicks) {
+                        // Resetting values if power was accumulated but LMB was up when aiming at block
+                        boolean isBlocking = mc.player.isActiveItemStackBlocking();
+                        //LOGGER.warn("isBlocking = " + isBlocking);
+                        if ((isAimingAtBlock && !isHoldingSword) && !isBattleMode || isBlocking) {
+                            ticksLMBPressed = 0; // TODO make resetVariables() func
+                            ticksCanCombo = ticksCanComboInit;
+                            comboTimerCurrent = 0;
+                            comboNum = 0;
+                            isComboRuined = true;
+                            isComboAvailable = false;
+                            isComboInProgress = false;
+                            isAccumulatingPower = false;
+                            ACSGuiHandler.drawComboIndicator = false;
+                        } else {
+                            isAccumulatingPower = false;
+                            ACSGuiHandler.drawComboIndicator = false;
+                            AdvancedCombatSystem.swing(mc.player, ticksLMBPressed);
+                            mc.player.swingArm(Hand.MAIN_HAND);
+                            MouseLeftKeyLastValue = isMouseLeftKeyPressed;
+
+                            // Combo processing ============================================================================
+                            if (isComboAvailable) {
+                                ticksCanComboCurrent = 0;
+                                ticksLMBPressed = 0;
+                                comboNum++;
+                                if (comboNum > combosAvailable) {
+                                    comboTimerCurrent = 0;
+                                    comboNum = 0;
+                                    ticksLMBPressed = neededBackswingTicks - 1;
+                                    isComboRuined = true;
+                                    isComboAvailable = false;
+                                    isComboInProgress = false;
+                                    ticksCanCombo = ticksCanComboInit;
+                                    //LOGGER.warn("Maximum combo reached!");
+                                } else {
+                                    comboTimerCurrent = 0;
+                                    isComboRuined = false;
+                                    isComboAvailable = false;
+                                    isComboInProgress = true;
+                                    ticksCanCombo = ticksCanComboInit * (float) (Math.pow(comboComplicationDelta, comboNum));
+                                    //LOGGER.warn("Combo passed! new combo window: " + ticksCanCombo);
+                                    ACSGuiHandler.drawComboPassedIndicator = true;
+                                }
+                            } else {
+                                ACSGuiHandler.drawComboPassedIndicator = false;
+                                isComboRuined = true;
+                                isComboInProgress = false;
+                                ticksCanCombo = ticksCanComboInit;
+                                comboNum = 0;
+                                //LOGGER.warn("Combo failed! new combo window: " + ticksCanCombo);
+                            }
+                        }
+                        MouseLeftKeyLastValue = isMouseLeftKeyPressed;
+                    } else {
+                        if (!isMouseLeftKeyUp) {
+                            isMouseLeftKeyUp = true;
+                            MouseLeftKeyLastValue = isMouseLeftKeyPressed;
                             ACSGuiHandler.drawComboPassedIndicator = false;
+                            ACSGuiHandler.drawBackwingRuined = true;
                             isComboRuined = true;
                             isComboInProgress = false;
                             ticksCanCombo = ticksCanComboInit;
+                            comboTimerCurrent = 0;
                             comboNum = 0;
-                            //LOGGER.warn("Combo failed! new combo window: " + ticksCanCombo);
                         }
                     }
-                    MouseLeftKeyLastValue = isMouseLeftKeyPressed;
                 }
-                else{
-                    if(!isMouseLeftKeyUp){
-                        isMouseLeftKeyUp = true;
-                        MouseLeftKeyLastValue = isMouseLeftKeyPressed;
-                        ACSGuiHandler.drawComboPassedIndicator = false;
-                        ACSGuiHandler.drawBackwingRuined = true;
-                        isComboRuined = true;
-                        isComboInProgress = false;
-                        ticksCanCombo = ticksCanComboInit;
-                        comboTimerCurrent = 0;
-                        comboNum = 0;
+
+                // Combo timers ============================================================================================
+                if (isComboRuined) {
+                    if (ticksLMBPressed > 0) {
+                        ticksLMBPressed -= 2;
+                    }
+                    if (ticksCanComboCurrent > 0) {
+                        ticksCanComboCurrent--;
+                    }
+                    if (ticksCanComboCurrent <= 0 && ticksLMBPressed <= 0) {
+                        isComboRuined = false;
+                        ticksLMBPressed = 0;
+                        ticksCanComboCurrent = 0;
                     }
                 }
-            }
+                if (isComboInProgress && !isAccumulatingPower) {
+                    comboTimerCurrent++;
+                }
+                if (comboTimerCurrent >= comboTimerInit) {
+                    ticksCanCombo = ticksCanComboInit;
+                    comboTimerCurrent = 0;
+                    comboNum = 0;
+                    isComboAvailable = false;
+                    isComboRuined = true;
+                    isComboInProgress = false;
+                    //LOGGER.warn("Combo time out!");
+                }
 
-            // Combo timers ============================================================================================
-            if(isComboRuined){
-                if(ticksLMBPressed > 0) { ticksLMBPressed -= 2; }
-                if(ticksCanComboCurrent > 0) { ticksCanComboCurrent--; }
-                if(ticksCanComboCurrent <= 0 && ticksLMBPressed <= 0){
-                    isComboRuined = false;
-                    ticksLMBPressed = 0;
-                    ticksCanComboCurrent = 0;
-                }
-            }
-            if(isComboInProgress && !isAccumulatingPower){
-                comboTimerCurrent++;
-            }
-            if(comboTimerCurrent >= comboTimerInit){
-                ticksCanCombo = ticksCanComboInit;
-                comboTimerCurrent = 0;
-                comboNum = 0;
-                isComboAvailable = false;
-                isComboRuined = true;
-                isComboInProgress = false;
-                //LOGGER.warn("Combo time out!");
-            }
+                MouseLeftKeyLastValue = isMouseLeftKeyPressed;
 
-            MouseLeftKeyLastValue = isMouseLeftKeyPressed;
-
-            // Dash handling ===========================================================================================
-            if(dashTimerCurrent >= dashTimerInit){
-                boolean isOnGround;
-                try{
-                    isOnGround = mc.player.onGround && !mc.player.isOnLadder() && !mc.player.isInWater();
-                }catch (Exception e){
-                    LOGGER.error("Error at dash handling: " + e);
-                    isOnGround = true;
+                // Dash handling ===========================================================================================
+                if (dashTimerCurrent >= dashTimerInit) {
+                    boolean isOnGround;
+                    try {
+                        isOnGround = mc.player.onGround && !mc.player.isOnLadder() && !mc.player.isInWater();
+                    } catch (Exception e) {
+                        LOGGER.error("Error at dash handling: " + e);
+                        isOnGround = true;
+                    }
+                    // Dash to left
+                    if (mc.gameSettings.keyBindLeft.isKeyDown() && mc.gameSettings.keyBindSprint.isKeyDown() && isOnGround) {
+                        //LOGGER.warn("Dash to left");
+                        dashTimerCurrent = 0;
+                        Dash((byte) 1, 0.6f);
+                        return;
+                    }
+                    // Dash to right
+                    if (mc.gameSettings.keyBindRight.isKeyDown() && mc.gameSettings.keyBindSprint.isKeyDown() && isOnGround) {
+                        //LOGGER.warn("Dash to right");
+                        dashTimerCurrent = 0;
+                        Dash((byte) 0, 0.6f);
+                        return;
+                    }
+                } else {
+                    dashTimerCurrent++;
                 }
-                // Dash to left
-                if(mc.gameSettings.keyBindLeft.isKeyDown() && mc.gameSettings.keyBindSprint.isKeyDown() && isOnGround){
-                    //LOGGER.warn("Dash to left");
-                    dashTimerCurrent = 0;
-                    Dash((byte)1, 0.6f);
-                    return;
-                }
-                // Dash to right
-                if(mc.gameSettings.keyBindRight.isKeyDown() && mc.gameSettings.keyBindSprint.isKeyDown() && isOnGround){
-                    //LOGGER.warn("Dash to right");
-                    dashTimerCurrent = 0;
-                    Dash((byte)0, 0.6f);
-                    return;
-                }
-            }else{
-                dashTimerCurrent++;
             }
         }
     }
