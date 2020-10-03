@@ -21,8 +21,9 @@ public class AdvancedTiredItem extends TieredItem {
     private final float minBackswingTicks;
     private final int maxComboNum;
     private final double speedReduceModifier;
-    private final float comboChargingAccelerator;
+    private final float comboChargingAccelerator; //TODO rename it to comboSpeedBonus
     protected static final UUID ATTACK_ANGLE_MODIFIER = UUID.randomUUID();
+    @Deprecated
     public AdvancedTiredItem(IItemTier tier, float angleIn, float rangeIn, float neededBackswingTicksIn, float minBackswingTicksIn, int maxComboNumIn, double speedReduceModifierIn, float comboTicksModifierIn, Properties builder) {
         super(tier, builder);
         this.angle = angleIn;
@@ -32,6 +33,17 @@ public class AdvancedTiredItem extends TieredItem {
         this.maxComboNum = maxComboNumIn;
         this.speedReduceModifier = speedReduceModifierIn;
         this.comboChargingAccelerator = comboTicksModifierIn;
+    }
+
+    public AdvancedTiredItem(IItemTier tier, ACSAttributesContainer attrContainer, Properties builder){
+        super(tier, builder);
+        this.angle = attrContainer.ANGLE;
+        this.range = attrContainer.RANGE;
+        this.neededBackswingTicks = attrContainer.NEEDED_BACKSWING_TICKS;
+        this.minBackswingTicks = attrContainer.MIN_BACKSWING_TICKS;
+        this.maxComboNum = attrContainer.MAX_COMBO_NUM;
+        this.speedReduceModifier = attrContainer.SPEED_REDUCE_MODIFIER;
+        this.comboChargingAccelerator = attrContainer.COMBO_CHARGING_ACCELERATOR;
     }
 
     public ACSAttributesContainer getACSAttributes(){

@@ -1,7 +1,7 @@
 package com.byalexeykh.advancedcombatsystem.items;
 
 import net.minecraft.block.BlockState;
-import net.minecraft.item.Item;
+import net.minecraft.item.*;
 
 public class ACSAttributesContainer {
     public static float ANGLE;
@@ -44,6 +44,21 @@ public class ACSAttributesContainer {
     public static ACSAttributesContainer get(Item item){
         if(item instanceof AdvancedTiredItem){
             return ((AdvancedTiredItem)item).getACSAttributes();
+        }
+        else if(item instanceof SwordItem){
+            return new ACSAttributesContainer (50, 7, 16, 5, 4, -0.01d, 0.2f);
+        }
+        else if(item instanceof PickaxeItem){
+            return new ACSAttributesContainer (30, 5, 20, 7, 2, -0.025d, 0.2f);
+        }
+        else if(item instanceof AxeItem){
+            return new ACSAttributesContainer(40, 6, 30, 10, 2, -0.035d, 0.2f);
+        }
+        else if(item instanceof ShovelItem){
+            return new ACSAttributesContainer(40, 6, 20, 6, 3, -0.025d, 0.2f);
+        }
+        else if(item instanceof HoeItem){
+            return new ACSAttributesContainer(70, 5, 20, 8, 2, -0.025d, 0.2f);
         }
         else{
             return getDefaultContainer();

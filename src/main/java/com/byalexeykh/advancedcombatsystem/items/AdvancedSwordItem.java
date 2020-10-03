@@ -26,8 +26,14 @@ import java.util.List;
 public class AdvancedSwordItem extends AdvancedTiredItem {
     private final float attackDamage;
     // ACS attributes
+    @Deprecated
     public AdvancedSwordItem(IItemTier tier, float attackDamageIn, float angleIn, float rangeIn, float neededBackswingTicksIn, float minBackswingTicksIn, int maxComboNumIn, double speedReduceModifierIn, float comboTicksModifierIn, Properties builder) {
         super(tier, angleIn, rangeIn, neededBackswingTicksIn, minBackswingTicksIn, maxComboNumIn, speedReduceModifierIn, comboTicksModifierIn, builder);
+        this.attackDamage = attackDamageIn + tier.getAttackDamage();
+    }
+
+    public AdvancedSwordItem(IItemTier tier, float attackDamageIn, ACSAttributesContainer attrContainer, Properties builder){
+        super(tier, attrContainer, builder);
         this.attackDamage = attackDamageIn + tier.getAttackDamage();
     }
 

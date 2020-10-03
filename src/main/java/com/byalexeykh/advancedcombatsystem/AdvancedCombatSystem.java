@@ -1,18 +1,20 @@
 package com.byalexeykh.advancedcombatsystem;
 
-import com.byalexeykh.advancedcombatsystem.entities.AdvancedEntities;
-import com.byalexeykh.advancedcombatsystem.entities.SkeletonWarriorEntity;
+import com.byalexeykh.advancedcombatsystem.config.CommonConfigObj;
+import com.byalexeykh.advancedcombatsystem.config.Config;
+import com.byalexeykh.advancedcombatsystem.config.itemRegistryContainer;
 import com.byalexeykh.advancedcombatsystem.items.*;
 import com.byalexeykh.advancedcombatsystem.networking.NetworkHandler;
 import com.byalexeykh.advancedcombatsystem.networking.messages.MessageDestroyBlock;
 import com.byalexeykh.advancedcombatsystem.networking.messages.MessageSwing;
 import com.byalexeykh.advancedcombatsystem.networking.messages.MessageSwingEffects;
+import com.google.gson.Gson;
+import com.google.gson.GsonBuilder;
 import net.minecraft.block.*;
 import net.minecraft.client.settings.KeyBinding;
 import net.minecraft.client.util.InputMappings;
 import net.minecraft.enchantment.EnchantmentHelper;
 import net.minecraft.entity.*;
-import net.minecraft.entity.ai.attributes.AttributeModifier;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.entity.projectile.ProjectileHelper;
 import net.minecraft.item.*;
@@ -26,16 +28,16 @@ import net.minecraftforge.api.distmarker.OnlyIn;
 import net.minecraftforge.client.settings.KeyConflictContext;
 import net.minecraftforge.client.settings.KeyModifier;
 import net.minecraftforge.common.MinecraftForge;
+import net.minecraftforge.event.RegistryEvent;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
-import net.minecraftforge.fml.ModLoadingContext;
 import net.minecraftforge.fml.RegistryObject;
 import net.minecraftforge.fml.client.registry.ClientRegistry;
 import net.minecraftforge.fml.common.Mod;
-import net.minecraftforge.fml.config.ModConfig;
 import net.minecraftforge.fml.event.lifecycle.FMLClientSetupEvent;
 import net.minecraftforge.fml.event.lifecycle.FMLDedicatedServerSetupEvent;
 import net.minecraftforge.fml.javafmlmod.FMLJavaModLoadingContext;
 import net.minecraftforge.fml.loading.FMLEnvironment;
+import net.minecraftforge.fml.loading.FMLPaths;
 import net.minecraftforge.registries.DeferredRegister;
 import net.minecraftforge.registries.ForgeRegistries;
 import org.apache.logging.log4j.Level;
@@ -43,7 +45,7 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.lwjgl.glfw.GLFW;
 
-import java.util.UUID;
+import java.io.File;
 import java.util.function.Predicate;
 
 @Mod("advancedcombatsystem")
@@ -76,14 +78,40 @@ public class AdvancedCombatSystem
     public static final RegistryObject<Item> IRON_SHOVEL = ITEMS.register("iron_shovel", () -> AdvancedItems.iron_shovel);
     public static final RegistryObject<Item> DIAMOND_SHOVEL = ITEMS.register("diamond_shovel", () -> AdvancedItems.diamond_shovel);
 
-    private static final DeferredRegister<EntityType<?>> MOD_ENTITIES = DeferredRegister.create(ForgeRegistries.ENTITIES, AdvancedCombatSystem.MODID);
+    //private static final DeferredRegister<EntityType<?>> MOD_ENTITIES = DeferredRegister.create(ForgeRegistries.ENTITIES, AdvancedCombatSystem.MODID);
     //public static final RegistryObject<EntityType<SkeletonWarriorEntity>> SKELETON_WARRIOR = MOD_ENTITIES.register("skeleton_warrior", () -> AdvancedEntities.skeleton_warrior);
 
-    private static final DeferredRegister<Item> MOD_ITEMS = DeferredRegister.create(ForgeRegistries.ITEMS, AdvancedCombatSystem.MODID);
-    public static final RegistryObject<Item> SKELETON_WARRIOR_SPAWNEGG = MOD_ITEMS.register("skeleton_warrior_spawnegg", () -> AdvancedItems.skeleton_warrior_spawnegg);
+    //private static final DeferredRegister<Item> MOD_ITEMS = DeferredRegister.create(ForgeRegistries.ITEMS, AdvancedCombatSystem.MODID);
+    //public static final RegistryObject<Item> SKELETON_WARRIOR_SPAWNEGG = MOD_ITEMS.register("skeleton_warrior_spawnegg", () -> AdvancedItems.skeleton_warrior_spawnegg);
+
+    public static final String MODID = "advancedcombatsystem";
+    public static Logger LOGGER = LogManager.getLogger();
+    private static Gson gson = new GsonBuilder().setPrettyPrinting().create();
 
     public AdvancedCombatSystem(){
+        LOGGER.info("Advanced Combat System initialization...");
         MinecraftForge.EVENT_BUS.register(this);
+
+        CommonConfigObj commonConfig;
+        String commonConfigPath = FMLPaths.CONFIGDIR.get().resolve("advancedcombatsystem-common.json").toString();
+        if(!new File(commonConfigPath).exists()){
+            Config.createFile(commonConfigPath);
+            Config.initCommonConfig(gson, commonConfigPath);
+            commonConfig = Config.getDefaultCommonConfig();
+        }
+        else{
+            commonConfig = Config.readCommonConfig(gson, FMLPaths.CONFIGDIR.get().resolve("advancedcombatsystem-common.json").toString());
+        }
+
+        String itemsPath = FMLPaths.CONFIGDIR.get().resolve("advancedcombatsystem-items.json").toString();
+        if(!new File(itemsPath).exists()){
+            Config.createFile(itemsPath);
+            AdvancedItems.writeDefaultToJson(gson, itemsPath);
+        }
+        else{
+             AdvancedItems.setItemsToRegister(Config.readItemsConfig(gson, itemsPath).getAttrContainers());
+        }
+
         if(FMLEnvironment.dist == Dist.CLIENT){
             FMLJavaModLoadingContext.get().getModEventBus().addListener(this::onClienSetup);
         }
@@ -91,6 +119,13 @@ public class AdvancedCombatSystem
             FMLJavaModLoadingContext.get().getModEventBus().addListener(this::onServerSetup);
         }
         ITEMS.register(FMLJavaModLoadingContext.get().getModEventBus());
+    }
+
+    @SubscribeEvent
+    public void registerItem(RegistryEvent.Register<Item> event){
+        for(itemRegistryContainer i : AdvancedItems.getItemsToRegister()){
+            event.getRegistry(). register(i.itemToRegister); // TODO register all items with correct modid and name
+        }
     }
 
     @SubscribeEvent
@@ -108,9 +143,6 @@ public class AdvancedCombatSystem
         LOGGER.log(Level.INFO, "Server setup for Advanced Combat System...");
         new NetworkHandler();
     }
-
-    public static final String MODID = "advancedcombatsystem";
-    private static Logger LOGGER = LogManager.getLogger();
 
     public static float calculateDamage(float ticksSinceLMBPressed, PlayerEntity player, Entity targetEntity){
         float BackswingProgress;

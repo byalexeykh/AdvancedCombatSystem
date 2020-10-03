@@ -12,15 +12,23 @@ import net.minecraft.item.IItemTier;
 import net.minecraft.item.ItemStack;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.world.World;
-
 import java.util.Set;
 
 public class AdvancedToolItem extends AdvancedTiredItem {
     private final Set<Block> effectiveBlocks;
     protected final float efficiency;
     private final float attackDamage;
+
+    @Deprecated
     public AdvancedToolItem(IItemTier tier, float attackDamageIn, Set<Block> effectiveBlocksIn, float angleIn, float rangeIn, float neededBackswingTicksIn, float minBackswingTicksIn, int maxComboNumIn, double speedReduceModifierIn, float comboTicksModifierIn, Properties builder) {
         super(tier, angleIn, rangeIn, neededBackswingTicksIn, minBackswingTicksIn, maxComboNumIn, speedReduceModifierIn, comboTicksModifierIn, builder);
+        this.attackDamage = attackDamageIn + tier.getAttackDamage();
+        this.effectiveBlocks = effectiveBlocksIn;
+        this.efficiency = tier.getEfficiency();
+    }
+
+    public AdvancedToolItem(IItemTier tier, float attackDamageIn, Set<Block> effectiveBlocksIn, ACSAttributesContainer attrContainer, Properties builder){
+        super(tier, attrContainer.ANGLE, attrContainer.RANGE, attrContainer.NEEDED_BACKSWING_TICKS, attrContainer.MIN_BACKSWING_TICKS, attrContainer.MAX_COMBO_NUM, attrContainer.SPEED_REDUCE_MODIFIER, attrContainer.COMBO_CHARGING_ACCELERATOR, builder);
         this.attackDamage = attackDamageIn + tier.getAttackDamage();
         this.effectiveBlocks = effectiveBlocksIn;
         this.efficiency = tier.getEfficiency();
