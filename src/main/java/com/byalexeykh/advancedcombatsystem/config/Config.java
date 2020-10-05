@@ -31,11 +31,13 @@ public class Config {
         FileWriter writer;
         try{
             writer = new FileWriter(path);
+            gson.toJson(commonConfigObj, writer);
+            writer.flush();
+            writer.close();
         }catch (Exception e){
             AdvancedCombatSystem.LOGGER.error("[ACS] error while common config initialization: " + e);
             return;
         }
-        gson.toJson(commonConfigObj, writer);
     }
 
     public static CommonConfigObj readCommonConfig(Gson gson, String path){
@@ -49,7 +51,7 @@ public class Config {
         return gson.fromJson(reader, CommonConfigObj.class);
     }
 
-    public static jsonACSAttributesContainers readItemsConfig(Gson gson, String path){
+    public static jsonACSAttributesContainer[] readItemsConfig(Gson gson, String path){
         FileReader reader;
         try{
             reader = new FileReader(path);
@@ -57,7 +59,7 @@ public class Config {
             AdvancedCombatSystem.LOGGER.error("[ACS] Error while reading items config: " + e);
             return null;
         }
-        return gson.fromJson(reader, jsonACSAttributesContainers.class);
+        return gson.fromJson(reader, jsonACSAttributesContainer[].class);
     }
 
     public static CommonConfigObj getDefaultCommonConfig(){

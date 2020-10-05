@@ -63,4 +63,10 @@ public class AdvancedAxeItem extends AdvancedToolItem {
             return ActionResultType.PASS;
         }
     }
+
+    @Override
+    public String toString() {
+        return "AdvancedAxeItem";
+    }
+
 }

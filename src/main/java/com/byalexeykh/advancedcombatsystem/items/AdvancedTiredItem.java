@@ -43,7 +43,7 @@ public class AdvancedTiredItem extends TieredItem {
         this.minBackswingTicks = attrContainer.MIN_BACKSWING_TICKS;
         this.maxComboNum = attrContainer.MAX_COMBO_NUM;
         this.speedReduceModifier = attrContainer.SPEED_REDUCE_MODIFIER;
-        this.comboChargingAccelerator = attrContainer.COMBO_CHARGING_ACCELERATOR;
+        this.comboChargingAccelerator = attrContainer.COMBO_CHARGING_SPEED_BOUNS;
     }
 
     public ACSAttributesContainer getACSAttributes(){
@@ -57,5 +57,10 @@ public class AdvancedTiredItem extends TieredItem {
         tooltip.add(new TranslationTextComponent("items.description.range", this.range).appendText(" " + this.range).applyTextStyle(TextFormatting.GREEN));
         tooltip.add(new TranslationTextComponent("items.description.maxcombos", this.maxComboNum).appendText(" " + this.maxComboNum).applyTextStyle(TextFormatting.GREEN));
         tooltip.add(new TranslationTextComponent("items.description.chargingaccelerator", this.comboChargingAccelerator).appendText(" " + this.comboChargingAccelerator).applyTextStyle(TextFormatting.GREEN));
+    }
+
+    @Override
+    public String toString() {
+        return "AdvancedTiredItem";
     }
 }

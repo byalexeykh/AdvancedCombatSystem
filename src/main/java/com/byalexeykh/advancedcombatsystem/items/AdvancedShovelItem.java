@@ -79,4 +79,9 @@ public class AdvancedShovelItem extends AdvancedToolItem {
             }
         }
     }
+
+    @Override
+    public String toString() {
+        return "AdvancedShovelItem";
+    }
 }

@@ -1,13 +1,13 @@
 package com.byalexeykh.advancedcombatsystem.config;
 
 public class CommonConfigObj {
-    private static boolean resetAttributesToDefault = false;
+    public boolean resetToDefault = false;
 
     CommonConfigObj(boolean resetAttributesToDefaultIn) {
-        this.resetAttributesToDefault = resetAttributesToDefaultIn;
+        this.resetToDefault = resetAttributesToDefaultIn;
     }
 
-    public static boolean getResetAttributesToDefault(){
-        return resetAttributesToDefault;
+    public boolean getResetAttributesToDefault(){
+        return resetToDefault;
     }
 }

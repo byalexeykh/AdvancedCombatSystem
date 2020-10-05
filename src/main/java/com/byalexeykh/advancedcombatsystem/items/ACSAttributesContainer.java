@@ -4,21 +4,21 @@ import net.minecraft.block.BlockState;
 import net.minecraft.item.*;
 
 public class ACSAttributesContainer {
-    public static float ANGLE;
-    public static float RANGE;
-    public static float NEEDED_BACKSWING_TICKS;
-    public static float MIN_BACKSWING_TICKS;
-    public static int MAX_COMBO_NUM;
+    public final float ANGLE;
+    public final float RANGE;
+    public final float NEEDED_BACKSWING_TICKS;
+    public final float MIN_BACKSWING_TICKS;
+    public final int MAX_COMBO_NUM;
     public final double SPEED_REDUCE_MODIFIER;
-    public final float COMBO_CHARGING_ACCELERATOR;
-    public ACSAttributesContainer(float angle, float range, float neededBackswingTicks, float minBackswingTicks, int maxComboNum, double speedReduceModifier, float comboChargingAccelerator){
+    public final float COMBO_CHARGING_SPEED_BOUNS;
+    public ACSAttributesContainer(float angle, float range, float neededBackswingTicks, float minBackswingTicks, int maxComboNum, double speedReduceModifier, float comboChargingSpeedBonus){
         this.ANGLE = angle;
         this.RANGE = range;
         this.NEEDED_BACKSWING_TICKS = neededBackswingTicks;
         this.MIN_BACKSWING_TICKS = minBackswingTicks;
         this.MAX_COMBO_NUM = maxComboNum;
         this.SPEED_REDUCE_MODIFIER = speedReduceModifier;
-        this.COMBO_CHARGING_ACCELERATOR = comboChargingAccelerator;
+        this.COMBO_CHARGING_SPEED_BOUNS = comboChargingSpeedBonus;
     }
 
     /**
@@ -63,5 +63,10 @@ public class ACSAttributesContainer {
         else{
             return getDefaultContainer();
         }
+    }
+
+    @Override
+    public String toString() {
+        return "Angle = " + this.ANGLE + " range = " + this.RANGE + " needed_backswing_ticks = " + this.NEEDED_BACKSWING_TICKS + " max_combo_num = " + this.MAX_COMBO_NUM + " speed_reduce_modifier = " + this.SPEED_REDUCE_MODIFIER + " combo_charging_speed_bonus = " + this.COMBO_CHARGING_SPEED_BOUNS;
     }
 }

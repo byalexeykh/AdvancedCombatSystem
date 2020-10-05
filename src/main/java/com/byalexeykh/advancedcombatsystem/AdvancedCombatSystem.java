@@ -2,7 +2,7 @@ package com.byalexeykh.advancedcombatsystem;
 
 import com.byalexeykh.advancedcombatsystem.config.CommonConfigObj;
 import com.byalexeykh.advancedcombatsystem.config.Config;
-import com.byalexeykh.advancedcombatsystem.config.itemRegistryContainer;
+import com.byalexeykh.advancedcombatsystem.config.jsonACSAttributesContainer;
 import com.byalexeykh.advancedcombatsystem.items.*;
 import com.byalexeykh.advancedcombatsystem.networking.NetworkHandler;
 import com.byalexeykh.advancedcombatsystem.networking.messages.MessageDestroyBlock;
@@ -46,37 +46,15 @@ import org.apache.logging.log4j.Logger;
 import org.lwjgl.glfw.GLFW;
 
 import java.io.File;
+import java.util.*;
 import java.util.function.Predicate;
 
 @Mod("advancedcombatsystem")
 public class AdvancedCombatSystem
 {
-    private static final DeferredRegister<Item> ITEMS = DeferredRegister.create(ForgeRegistries.ITEMS, "minecraft");
-    public static final RegistryObject<Item> WOODEN_SWORD = ITEMS.register("wooden_sword", () -> AdvancedItems.wooden_sword);
-    public static final RegistryObject<Item> GOLDEN_SWORD = ITEMS.register("golden_sword", () -> AdvancedItems.golden_sword);
-    public static final RegistryObject<Item> STONE_SWORD = ITEMS.register("stone_sword", () -> AdvancedItems.stone_sword);
-    public static final RegistryObject<Item> IRON_SWORD = ITEMS.register("iron_sword", () -> AdvancedItems.iron_sword);
-    public static final RegistryObject<Item> DIAMOND_SWORD = ITEMS.register("diamond_sword", () -> AdvancedItems.diamond_sword);
-    public static final RegistryObject<Item> WOODEN_AXE = ITEMS.register("wooden_axe", () -> AdvancedItems.wooden_axe);
-    public static final RegistryObject<Item> GOLDEN_AXE = ITEMS.register("golden_axe", () -> AdvancedItems.golden_axe);
-    public static final RegistryObject<Item> STONE_AXE = ITEMS.register("stone_axe", () -> AdvancedItems.stone_axe);
-    public static final RegistryObject<Item> IRON_AXE = ITEMS.register("iron_axe", () -> AdvancedItems.iron_axe);
-    public static final RegistryObject<Item> DIAMOND_AXE = ITEMS.register("diamond_axe", () -> AdvancedItems.diamond_axe);
-    public static final RegistryObject<Item> WOODEN_HOE = ITEMS.register("wooden_hoe", () -> AdvancedItems.wooden_hoe);
-    public static final RegistryObject<Item> GOLDEN_HOE = ITEMS.register("golden_hoe", () -> AdvancedItems.golden_hoe);
-    public static final RegistryObject<Item> STONE_HOE = ITEMS.register("stone_hoe", () -> AdvancedItems.stone_hoe);
-    public static final RegistryObject<Item> IRON_HOE = ITEMS.register("iron_hoe", () -> AdvancedItems.iron_hoe);
-    public static final RegistryObject<Item> DIAMOND_HOE = ITEMS.register("diamond_hoe", () -> AdvancedItems.diamond_hoe);
-    public static final RegistryObject<Item> WOODEN_PICKAXE = ITEMS.register("wooden_pickaxe", () -> AdvancedItems.wooden_pickaxe);
-    public static final RegistryObject<Item> GOLDEN_PICKAXE = ITEMS.register("golden_pickaxe", () -> AdvancedItems.golden_pickaxe);
-    public static final RegistryObject<Item> STONE_PICKAXE = ITEMS.register("stone_pickaxe", () -> AdvancedItems.stone_pickaxe);
-    public static final RegistryObject<Item> IRON_PICKAXE = ITEMS.register("iron_pickaxe", () -> AdvancedItems.iron_pickaxe);
-    public static final RegistryObject<Item> DIAMOND_PICKAXE = ITEMS.register("diamond_pickaxe", () -> AdvancedItems.diamond_pickaxe);
-    public static final RegistryObject<Item> WOODEN_SHOVEL = ITEMS.register("wooden_shovel", () -> AdvancedItems.wooden_shovel);
-    public static final RegistryObject<Item> GOLDEN_SHOVEL = ITEMS.register("golden_shovel", () -> AdvancedItems.golden_shovel);
-    public static final RegistryObject<Item> STONE_SHOVEL = ITEMS.register("stone_shovel", () -> AdvancedItems.stone_shovel);
-    public static final RegistryObject<Item> IRON_SHOVEL = ITEMS.register("iron_shovel", () -> AdvancedItems.iron_shovel);
-    public static final RegistryObject<Item> DIAMOND_SHOVEL = ITEMS.register("diamond_shovel", () -> AdvancedItems.diamond_shovel);
+    public static HashMap<String, DeferredRegister<Item>> ITEMS_DYNAMIC_REGISTER = new HashMap<String, DeferredRegister<Item>>();
+    public static List<RegistryObject<Item>> ITEMS_TO_REGISTER = new ArrayList<>();
+    /*private static final DeferredRegister<Item> ITEMS = DeferredRegister.create(ForgeRegistries.ITEMS, "minecraft");*/
 
     //private static final DeferredRegister<EntityType<?>> MOD_ENTITIES = DeferredRegister.create(ForgeRegistries.ENTITIES, AdvancedCombatSystem.MODID);
     //public static final RegistryObject<EntityType<SkeletonWarriorEntity>> SKELETON_WARRIOR = MOD_ENTITIES.register("skeleton_warrior", () -> AdvancedEntities.skeleton_warrior);
@@ -87,11 +65,13 @@ public class AdvancedCombatSystem
     public static final String MODID = "advancedcombatsystem";
     public static Logger LOGGER = LogManager.getLogger();
     private static Gson gson = new GsonBuilder().setPrettyPrinting().create();
+    private static jsonACSAttributesContainer[] attrCotainersToRegister;
 
     public AdvancedCombatSystem(){
-        LOGGER.info("Advanced Combat System initialization...");
+        LOGGER.debug("Advanced Combat System initialization...");
         MinecraftForge.EVENT_BUS.register(this);
 
+        // READING COMMON CONFIG =======================================================================================
         CommonConfigObj commonConfig;
         String commonConfigPath = FMLPaths.CONFIGDIR.get().resolve("advancedcombatsystem-common.json").toString();
         if(!new File(commonConfigPath).exists()){
@@ -103,29 +83,51 @@ public class AdvancedCombatSystem
             commonConfig = Config.readCommonConfig(gson, FMLPaths.CONFIGDIR.get().resolve("advancedcombatsystem-common.json").toString());
         }
 
+        // READING ITEMS CONFIG ========================================================================================
         String itemsPath = FMLPaths.CONFIGDIR.get().resolve("advancedcombatsystem-items.json").toString();
         if(!new File(itemsPath).exists()){
             Config.createFile(itemsPath);
             AdvancedItems.writeDefaultToJson(gson, itemsPath);
         }
         else{
-             AdvancedItems.setItemsToRegister(Config.readItemsConfig(gson, itemsPath).getAttrContainers());
+            if(commonConfig.getResetAttributesToDefault()){
+                AdvancedItems.writeDefaultToJson(gson, itemsPath);
+                Config.initCommonConfig(gson, commonConfigPath);
+            }
+        }
+        attrCotainersToRegister = Config.readItemsConfig(gson, itemsPath);
+
+        // REGISTERING ITEMS FROM CONFIG ===============================================================================
+        LOGGER.debug("[ACS] Registering items from config");
+        List<String> modids = new ArrayList<>();
+        for (jsonACSAttributesContainer container : attrCotainersToRegister){
+            modids.add(container.modid);
+        }
+        Set<String> set = new HashSet<>(modids);
+        modids.clear();
+        modids.addAll(set);
+        LOGGER.debug("[ACS] detected modid's whose items need to be replaced: " + modids.toString());
+
+        for (String modid : modids){
+            ITEMS_DYNAMIC_REGISTER.put(modid, DeferredRegister.create(ForgeRegistries.ITEMS, modid));
         }
 
+        for (jsonACSAttributesContainer container : attrCotainersToRegister){
+                LOGGER.debug("[ACS] Registering item " + container.name + " from: " + container.modid);
+                ITEMS_TO_REGISTER.add(ITEMS_DYNAMIC_REGISTER.get(container.modid).register(container.name, () -> AdvancedItems.instantiateItem(container)));
+        }
+
+        // MOD SETUP ===================================================================================================
         if(FMLEnvironment.dist == Dist.CLIENT){
             FMLJavaModLoadingContext.get().getModEventBus().addListener(this::onClienSetup);
         }
         else{
             FMLJavaModLoadingContext.get().getModEventBus().addListener(this::onServerSetup);
         }
-        ITEMS.register(FMLJavaModLoadingContext.get().getModEventBus());
-    }
-
-    @SubscribeEvent
-    public void registerItem(RegistryEvent.Register<Item> event){
-        for(itemRegistryContainer i : AdvancedItems.getItemsToRegister()){
-            event.getRegistry(). register(i.itemToRegister); // TODO register all items with correct modid and name
+        for(Map.Entry<String, DeferredRegister<Item>> entry : ITEMS_DYNAMIC_REGISTER.entrySet()){
+            entry.getValue().register(FMLJavaModLoadingContext.get().getModEventBus());
         }
+        //ITEMS.register(FMLJavaModLoadingContext.get().getModEventBus());
     }
 
     @SubscribeEvent

@@ -78,4 +78,9 @@ public class AdvancedHoeItem extends AdvancedTiredItem {
         });
         return true;
     }
+
+    @Override
+    public String toString() {
+        return "AdvancedHoeItem";
+    }
 }

@@ -28,7 +28,7 @@ public class AdvancedToolItem extends AdvancedTiredItem {
     }
 
     public AdvancedToolItem(IItemTier tier, float attackDamageIn, Set<Block> effectiveBlocksIn, ACSAttributesContainer attrContainer, Properties builder){
-        super(tier, attrContainer.ANGLE, attrContainer.RANGE, attrContainer.NEEDED_BACKSWING_TICKS, attrContainer.MIN_BACKSWING_TICKS, attrContainer.MAX_COMBO_NUM, attrContainer.SPEED_REDUCE_MODIFIER, attrContainer.COMBO_CHARGING_ACCELERATOR, builder);
+        super(tier, attrContainer.ANGLE, attrContainer.RANGE, attrContainer.NEEDED_BACKSWING_TICKS, attrContainer.MIN_BACKSWING_TICKS, attrContainer.MAX_COMBO_NUM, attrContainer.SPEED_REDUCE_MODIFIER, attrContainer.COMBO_CHARGING_SPEED_BOUNS, builder);
         this.attackDamage = attackDamageIn + tier.getAttackDamage();
         this.effectiveBlocks = effectiveBlocksIn;
         this.efficiency = tier.getEfficiency();
@@ -77,5 +77,10 @@ public class AdvancedToolItem extends AdvancedTiredItem {
             multimap.put(SharedMonsterAttributes.ATTACK_DAMAGE.getName(), new AttributeModifier(ATTACK_DAMAGE_MODIFIER, "Weapon modifier", this.attackDamage, AttributeModifier.Operation.ADDITION));
         }
         return multimap;
+    }
+
+    @Override
+    public String toString() {
+        return "AdvancedToolItem";
     }
 }

@@ -95,5 +95,13 @@ public class AdvancedSwordItem extends AdvancedTiredItem {
         return multimap;
     }
 
+    @Override
+    public String toString() {
+        return "AdvancedSwordItem";
+    }
+
+    public String toStringExtended(){
+        return "AdvancedSwordItem | " + getACSAttributes().toString();
+    }
 }
 

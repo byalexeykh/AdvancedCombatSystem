@@ -39,4 +39,9 @@ public class AdvancedPickaxeItem extends AdvancedToolItem {
         Material material = state.getMaterial();
         return material != Material.IRON && material != Material.ANVIL && material != Material.ROCK ? super.getDestroySpeed(stack, state) : this.efficiency;
     }
+
+    @Override
+    public String toString() {
+        return "AdvancedPickaxeItem";
+    }
 }

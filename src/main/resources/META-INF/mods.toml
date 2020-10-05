@@ -4,7 +4,7 @@ issueTrackerURL="https://github.com/byalexeykh/AdvancedCombatSystem/issues" #opt
 logoFile="logo.png" #optional
 [[mods]] #mandatory
 modId="advancedcombatsystem" #mandatory
-version="0.2.0" #mandatory
+version="0.2.1" #mandatory
 displayName="Advanced Combat System" #mandatory
 # updateJSONURL="" #optional
 displayURL="https://www.curseforge.com/minecraft/mc-mods/advanced-combat-system" #optional

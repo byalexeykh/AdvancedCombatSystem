@@ -104,7 +104,7 @@ public class ACSInputHandler {
 
                     if (ticksLMBPressed < neededBackswingTicks) {
                         isAccumulatingPower = true;
-                        ticksLMBPressed = ticksLMBPressed + 1 + ACSAttributesContainer.get(mc.player.getHeldItemMainhand().getItem()).COMBO_CHARGING_ACCELERATOR * comboNum;
+                        ticksLMBPressed = ticksLMBPressed + 1 + ACSAttributesContainer.get(mc.player.getHeldItemMainhand().getItem()).COMBO_CHARGING_SPEED_BOUNS * comboNum;
                     }
 
                     if (ticksLMBPressed >= neededBackswingTicks) {
