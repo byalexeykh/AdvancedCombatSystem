@@ -5,7 +5,6 @@ import com.google.common.collect.Multimap;
 import net.minecraft.block.BlockState;
 import net.minecraft.block.Blocks;
 import net.minecraft.block.material.Material;
-import net.minecraft.client.util.ITooltipFlag;
 import net.minecraft.entity.LivingEntity;
 import net.minecraft.entity.SharedMonsterAttributes;
 import net.minecraft.entity.ai.attributes.AttributeModifier;
@@ -15,22 +14,11 @@ import net.minecraft.item.IItemTier;
 import net.minecraft.item.ItemStack;
 import net.minecraft.tags.BlockTags;
 import net.minecraft.util.math.BlockPos;
-import net.minecraft.util.text.ITextComponent;
-import net.minecraft.util.text.TranslationTextComponent;
 import net.minecraft.world.World;
-import net.minecraftforge.client.event.GuiScreenEvent;
 
-import javax.annotation.Nullable;
-import java.util.List;
-
-public class AdvancedSwordItem extends AdvancedTiredItem {
+public class AdvancedSwordItem extends AdvancedTieredItem {
     private final float attackDamage;
     // ACS attributes
-    @Deprecated
-    public AdvancedSwordItem(IItemTier tier, float attackDamageIn, float angleIn, float rangeIn, float neededBackswingTicksIn, float minBackswingTicksIn, int maxComboNumIn, double speedReduceModifierIn, float comboTicksModifierIn, Properties builder) {
-        super(tier, angleIn, rangeIn, neededBackswingTicksIn, minBackswingTicksIn, maxComboNumIn, speedReduceModifierIn, comboTicksModifierIn, builder);
-        this.attackDamage = attackDamageIn + tier.getAttackDamage();
-    }
 
     public AdvancedSwordItem(IItemTier tier, float attackDamageIn, ACSAttributesContainer attrContainer, Properties builder){
         super(tier, attrContainer, builder);
@@ -48,6 +36,11 @@ public class AdvancedSwordItem extends AdvancedTiredItem {
 
     public float getAttackDamage() {
         return this.attackDamage;
+    }
+
+    @Override
+    public ACSAttributesContainer getACSAttributes(){
+        return ACSAttributes.getSwordsAttributes();
     }
 
     public boolean canPlayerBreakBlockWhileHolding(BlockState state, World worldIn, BlockPos pos, PlayerEntity player) {

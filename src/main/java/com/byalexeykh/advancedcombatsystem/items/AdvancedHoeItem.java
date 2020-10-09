@@ -22,13 +22,8 @@ import net.minecraft.world.World;
 
 import java.util.Map;
 
-public class AdvancedHoeItem extends AdvancedTiredItem {
+public class AdvancedHoeItem extends AdvancedTieredItem {
     protected static final Map<Block, BlockState> HOE_LOOKUP = Maps.newHashMap(ImmutableMap.of(Blocks.GRASS_BLOCK, Blocks.FARMLAND.getDefaultState(), Blocks.GRASS_PATH, Blocks.FARMLAND.getDefaultState(), Blocks.DIRT, Blocks.FARMLAND.getDefaultState(), Blocks.COARSE_DIRT, Blocks.DIRT.getDefaultState()));
-
-    @Deprecated
-    public AdvancedHoeItem(IItemTier tier, float angleIn, float rangeIn, float neededBackswingTicksIn, float minBackswingTicksIn, int maxComboNumIn, double speedReduceModifierIn, float comboTicksModifierIn, Properties builder) {
-        super(tier, angleIn, rangeIn, neededBackswingTicksIn, minBackswingTicksIn, maxComboNumIn, speedReduceModifierIn, comboTicksModifierIn, builder);
-    }
 
     public AdvancedHoeItem(IItemTier tier, ACSAttributesContainer attrContainer, Properties builder) {
         super(tier, attrContainer, builder);
@@ -37,6 +32,11 @@ public class AdvancedHoeItem extends AdvancedTiredItem {
     public boolean canDestroyBySwing(BlockState blockState){
         Material material = blockState.getMaterial();
         return material != Material.PLANTS && material != Material.TALL_PLANTS && !blockState.isIn(BlockTags.LEAVES) ? false : true;
+    }
+
+    @Override
+    public ACSAttributesContainer getACSAttributes(){
+        return ACSAttributes.getHoesAttributes();
     }
 
     /**

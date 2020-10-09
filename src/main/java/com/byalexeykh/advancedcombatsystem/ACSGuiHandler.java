@@ -4,15 +4,24 @@ import com.byalexeykh.advancedcombatsystem.items.ACSAttributesContainer;
 import com.byalexeykh.advancedcombatsystem.items.AdvancedSwordItem;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.AbstractGui;
+import net.minecraft.client.gui.screen.inventory.InventoryScreen;
+import net.minecraft.item.SwordItem;
+import net.minecraft.item.TieredItem;
 import net.minecraft.util.Hand;
 import net.minecraft.util.ResourceLocation;
 import net.minecraft.util.math.RayTraceResult;
+import net.minecraft.util.text.TextFormatting;
+import net.minecraft.util.text.TranslationTextComponent;
 import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.api.distmarker.OnlyIn;
+import net.minecraftforge.client.event.GuiScreenEvent;
 import net.minecraftforge.client.event.RenderGameOverlayEvent;
 import net.minecraftforge.common.MinecraftForge;
+import net.minecraftforge.event.entity.player.ItemTooltipEvent;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
 import net.minecraftforge.fml.common.Mod;
+
+import static com.byalexeykh.advancedcombatsystem.AdvancedCombatSystem.commonCfgObj;
 
 @Mod.EventBusSubscriber(bus = Mod.EventBusSubscriber.Bus.MOD, modid = "advancedcombatsystem", value = Dist.CLIENT)
 public class ACSGuiHandler extends AbstractGui {
@@ -43,11 +52,11 @@ public class ACSGuiHandler extends AbstractGui {
             BackswingY = (screenHeight / 2) + 7;
 
             // Draw backswing indicator ================================================================================
-            if(mc.player.getHeldItem(Hand.MAIN_HAND).getItem() instanceof AdvancedSwordItem || mc.objectMouseOver.getType() == RayTraceResult.Type.ENTITY || ACSInputHandler.isAccumulatingPower || ACSInputHandler.isBattleMode)
+            if(mc.player.getHeldItem(Hand.MAIN_HAND).getItem() instanceof SwordItem || mc.objectMouseOver.getType() == RayTraceResult.Type.ENTITY || ACSInputHandler.isAccumulatingPower || ACSInputHandler.isBattleMode)
             {
-                float neededBackswingTicks = ACSAttributesContainer.get(mc.player.getHeldItemMainhand().getItem()).NEEDED_BACKSWING_TICKS; // TODO find a way to not to do it in tick
+                float neededBackswingTicks = ACSAttributesContainer.get(mc.player).NEEDED_BACKSWING_TICKS;
                 float progressPercent = ACSInputHandler.getTicksLMBPressed() / neededBackswingTicks;
-                float minBackswingPercent = ACSAttributesContainer.get(mc.player.getHeldItemMainhand().getItem()).MIN_BACKSWING_TICKS / neededBackswingTicks;
+                float minBackswingPercent = ACSAttributesContainer.get(mc.player).MIN_BACKSWING_TICKS / neededBackswingTicks;
                 int currentWidth = (int)(bar_width * progressPercent);
                 int currentMinBackswing = (int)(bar_width * minBackswingPercent);
                 isBackswingIndicatorDrawed = true;
@@ -111,6 +120,18 @@ public class ACSGuiHandler extends AbstractGui {
             //blit(int x, int y, int zLevel, float textureX, float textureY, int width, int height, int textureWidth, int textureHeight);
             //blit(int x, int y, int desiredWidth, int desiredHeight, int textureX, int textureY, int width, int height, int textureWidth, int textureHeight);
             //innerBlit(int x, int endX, int y, int endY, int zLevel, int width, int height, float textureX, float textureY, int textureWidth, int textureHeight);
+        }
+    }
+
+    @SubscribeEvent
+    @OnlyIn(Dist.CLIENT)
+    public void onItemTooltipDisplayed(ItemTooltipEvent event){
+        if(event.getItemStack().getItem() instanceof TieredItem && commonCfgObj.getDrawExtendedTooltip()){
+            ACSAttributesContainer container = ACSAttributesContainer.get(event.getItemStack().getItem());
+            event.getToolTip().add(new TranslationTextComponent("items.description.angle", container.ANGLE).appendText(" " + container.ANGLE).applyTextStyle(TextFormatting.DARK_GREEN));
+            event.getToolTip().add(new TranslationTextComponent("items.description.range", container.RANGE).appendText(" " + container.RANGE).applyTextStyle(TextFormatting.DARK_GREEN));
+            event.getToolTip().add(new TranslationTextComponent("items.description.maxcombos", container.MAX_COMBO_NUM).appendText(" " + container.MAX_COMBO_NUM).applyTextStyle(TextFormatting.DARK_GREEN));
+            event.getToolTip().add(new TranslationTextComponent("items.description.chargingaccelerator", container.COMBO_CHARGING_SPEED_BOUNS).appendText(" " + container.COMBO_CHARGING_SPEED_BOUNS).applyTextStyle(TextFormatting.DARK_GREEN));
         }
     }
 }

@@ -1,10 +1,6 @@
 {
-  "homepage": "https://www.curseforge.com/minecraft/mc-mods/advanced-combat-system#c8",
+  "homepage": "https://www.curseforge.com/minecraft/mc-mods/advanced-combat-system",
   "1.15.2": {
     "0.2.1": "Config files, update.json file"
-  },
-  "promos": {
-    "1.15.2-latest": "0.2.1",
-    "1.15.2-recommended": "0.2.1"
   }
 }

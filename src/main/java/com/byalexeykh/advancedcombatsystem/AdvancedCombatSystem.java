@@ -2,6 +2,7 @@ package com.byalexeykh.advancedcombatsystem;
 
 import com.byalexeykh.advancedcombatsystem.config.CommonConfigObj;
 import com.byalexeykh.advancedcombatsystem.config.Config;
+import com.byalexeykh.advancedcombatsystem.config.DefaultsConfigObj;
 import com.byalexeykh.advancedcombatsystem.config.jsonACSAttributesContainer;
 import com.byalexeykh.advancedcombatsystem.items.*;
 import com.byalexeykh.advancedcombatsystem.networking.NetworkHandler;
@@ -28,9 +29,7 @@ import net.minecraftforge.api.distmarker.OnlyIn;
 import net.minecraftforge.client.settings.KeyConflictContext;
 import net.minecraftforge.client.settings.KeyModifier;
 import net.minecraftforge.common.MinecraftForge;
-import net.minecraftforge.event.RegistryEvent;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
-import net.minecraftforge.fml.RegistryObject;
 import net.minecraftforge.fml.client.registry.ClientRegistry;
 import net.minecraftforge.fml.common.Mod;
 import net.minecraftforge.fml.event.lifecycle.FMLClientSetupEvent;
@@ -46,15 +45,12 @@ import org.apache.logging.log4j.Logger;
 import org.lwjgl.glfw.GLFW;
 
 import java.io.File;
-import java.util.*;
 import java.util.function.Predicate;
 
 @Mod("advancedcombatsystem")
 public class AdvancedCombatSystem
 {
-    public static HashMap<String, DeferredRegister<Item>> ITEMS_DYNAMIC_REGISTER = new HashMap<String, DeferredRegister<Item>>();
-    public static List<RegistryObject<Item>> ITEMS_TO_REGISTER = new ArrayList<>();
-    /*private static final DeferredRegister<Item> ITEMS = DeferredRegister.create(ForgeRegistries.ITEMS, "minecraft");*/
+    //private static final DeferredRegister<Item> VANILLA_ITEMS = DeferredRegister.create(ForgeRegistries.ITEMS, "minecraft");
 
     //private static final DeferredRegister<EntityType<?>> MOD_ENTITIES = DeferredRegister.create(ForgeRegistries.ENTITIES, AdvancedCombatSystem.MODID);
     //public static final RegistryObject<EntityType<SkeletonWarriorEntity>> SKELETON_WARRIOR = MOD_ENTITIES.register("skeleton_warrior", () -> AdvancedEntities.skeleton_warrior);
@@ -64,58 +60,49 @@ public class AdvancedCombatSystem
 
     public static final String MODID = "advancedcombatsystem";
     public static Logger LOGGER = LogManager.getLogger();
+    public static CommonConfigObj commonCfgObj;
     private static Gson gson = new GsonBuilder().setPrettyPrinting().create();
-    private static jsonACSAttributesContainer[] attrCotainersToRegister;
+    private static DefaultsConfigObj[] defaultACScontainers;
 
     public AdvancedCombatSystem(){
         LOGGER.debug("Advanced Combat System initialization...");
         MinecraftForge.EVENT_BUS.register(this);
+        String commonConfigPath = FMLPaths.CONFIGDIR.get().resolve("advancedcombatsystem/advancedcombatsystem-common.json").toString();
+        String defaultsConfigPath = FMLPaths.CONFIGDIR.get().resolve("advancedcombatsystem/advancedcombatsystem-defaults.json").toString();
+        //String itemsConfigPath = FMLPaths.CONFIGDIR.get().resolve("advancedcombatsystem/advancedcombatsystem-items.json").toString();
 
+        LOGGER.debug("[ACS] Reading configs");
         // READING COMMON CONFIG =======================================================================================
-        CommonConfigObj commonConfig;
-        String commonConfigPath = FMLPaths.CONFIGDIR.get().resolve("advancedcombatsystem-common.json").toString();
         if(!new File(commonConfigPath).exists()){
             Config.createFile(commonConfigPath);
             Config.initCommonConfig(gson, commonConfigPath);
-            commonConfig = Config.getDefaultCommonConfig();
+            commonCfgObj = Config.getDefaultCommonConfig();
         }
         else{
-            commonConfig = Config.readCommonConfig(gson, FMLPaths.CONFIGDIR.get().resolve("advancedcombatsystem-common.json").toString());
-        }
-
-        // READING ITEMS CONFIG ========================================================================================
-        String itemsPath = FMLPaths.CONFIGDIR.get().resolve("advancedcombatsystem-items.json").toString();
-        if(!new File(itemsPath).exists()){
-            Config.createFile(itemsPath);
-            AdvancedItems.writeDefaultToJson(gson, itemsPath);
-        }
-        else{
-            if(commonConfig.getResetAttributesToDefault()){
-                AdvancedItems.writeDefaultToJson(gson, itemsPath);
+            commonCfgObj = Config.readCommonConfig(gson, commonConfigPath);
+            if(commonCfgObj.reset_Configs_To_Default){
+                commonCfgObj = Config.getDefaultCommonConfig();
                 Config.initCommonConfig(gson, commonConfigPath);
             }
         }
-        attrCotainersToRegister = Config.readItemsConfig(gson, itemsPath);
 
-        // REGISTERING ITEMS FROM CONFIG ===============================================================================
-        LOGGER.debug("[ACS] Registering items from config");
-        List<String> modids = new ArrayList<>();
-        for (jsonACSAttributesContainer container : attrCotainersToRegister){
-            modids.add(container.modid);
+        // READING DEFAULTS CONFIG =====================================================================================
+        if(!new File(defaultsConfigPath).exists() || commonCfgObj.getResetConfigsToDefault()){
+            Config.createFile(defaultsConfigPath);
+            Config.initDefaultsConfig(gson, defaultsConfigPath);
+            Config.initCommonConfig(gson, commonConfigPath);
         }
-        Set<String> set = new HashSet<>(modids);
-        modids.clear();
-        modids.addAll(set);
-        LOGGER.debug("[ACS] detected modid's whose items need to be replaced: " + modids.toString());
+        defaultACScontainers = Config.readDefaultsConfig(gson, defaultsConfigPath);
+        ACSAttributesContainer.setDefaults(defaultACScontainers);
 
-        for (String modid : modids){
-            ITEMS_DYNAMIC_REGISTER.put(modid, DeferredRegister.create(ForgeRegistries.ITEMS, modid));
+        /*// READING ITEMS CONFIG ========================================================================================
+        if(!new File(itemsConfigPath).exists() || commonConfig.getResetConfigsToDefault()){
+            Config.createFile(itemsConfigPath);
+            Config.initItemsConfig(gson, itemsConfigPath);
         }
+        ACSAttributes.loadAttributesFromConfig(Config.readItemsConfig(gson, itemsConfigPath));
 
-        for (jsonACSAttributesContainer container : attrCotainersToRegister){
-                LOGGER.debug("[ACS] Registering item " + container.name + " from: " + container.modid);
-                ITEMS_TO_REGISTER.add(ITEMS_DYNAMIC_REGISTER.get(container.modid).register(container.name, () -> AdvancedItems.instantiateItem(container)));
-        }
+        //AdvancedItems.registerAll(VANILLA_ITEMS);*/
 
         // MOD SETUP ===================================================================================================
         if(FMLEnvironment.dist == Dist.CLIENT){
@@ -124,10 +111,7 @@ public class AdvancedCombatSystem
         else{
             FMLJavaModLoadingContext.get().getModEventBus().addListener(this::onServerSetup);
         }
-        for(Map.Entry<String, DeferredRegister<Item>> entry : ITEMS_DYNAMIC_REGISTER.entrySet()){
-            entry.getValue().register(FMLJavaModLoadingContext.get().getModEventBus());
-        }
-        //ITEMS.register(FMLJavaModLoadingContext.get().getModEventBus());
+        //VANILLA_ITEMS.register(FMLJavaModLoadingContext.get().getModEventBus());
     }
 
     @SubscribeEvent
@@ -154,9 +138,9 @@ public class AdvancedCombatSystem
         float sprintModifier = 1.5f;
         boolean isJumping = player.fallDistance > 0.0F && !player.onGround && !player.isOnLadder() && !player.isInWater();
         boolean isSprinting = player.isSprinting();
-        ACSAttributesContainer acsAttributesContainer = ACSAttributesContainer.get(player.getHeldItemMainhand().getItem());
+        ACSAttributesContainer acsAttributesContainer = ACSAttributesContainer.get(player);
 
-        basicDamage = (float)player.getAttribute(SharedMonsterAttributes.ATTACK_DAMAGE).getValue(); //TODO take basic damage from item
+        basicDamage = (float)player.getAttribute(SharedMonsterAttributes.ATTACK_DAMAGE).getValue();
 
         float f1;
         if (targetEntity instanceof LivingEntity) {
@@ -200,7 +184,7 @@ public class AdvancedCombatSystem
     public static void swing(PlayerEntity player, float ticksSinceLMBPressed){
         ItemStack itemToHitWith = player.getHeldItemMainhand();
         World world = player.getEntityWorld();
-        ACSAttributesContainer acsAttributesContainer = ACSAttributesContainer.get(itemToHitWith.getItem());
+        ACSAttributesContainer acsAttributesContainer = ACSAttributesContainer.get(player);
         float angle = acsAttributesContainer.ANGLE; // Yaw
         float range = acsAttributesContainer.RANGE;
         int traceQuality = (int)((angle / 10) % 2 == 0 ? (angle / 10) - 1 : (angle / 10)); // number of trace attempts. The higher the quality, the denser the trace
@@ -253,9 +237,9 @@ public class AdvancedCombatSystem
                     new RayTraceContext(
                             player.getEyePosition(0.5f),
                             new Vec3d(
-                                    playerPos.x + vectorsToTrace[i].x/ 1.4,
-                                    playerPos.y + vectorsToTrace[i].y/ 1.4,
-                                    playerPos.z + vectorsToTrace[i].z / 1.4),
+                                    playerPos.x + vectorsToTrace[i].x/ 1.5,
+                                    playerPos.y + vectorsToTrace[i].y/ 1.5,
+                                    playerPos.z + vectorsToTrace[i].z / 1.5),
                             RayTraceContext.BlockMode.OUTLINE,
                             RayTraceContext.FluidMode.NONE,
                             player
@@ -289,7 +273,7 @@ public class AdvancedCombatSystem
         }
 
         // Checking if the current item is a hand, if not then swing effects are not played
-        if(itemToHitWith.getItem() instanceof AdvancedTiredItem) {
+        if(itemToHitWith.getItem() instanceof TieredItem) {
             try{
                 NetworkHandler.INSTANCE.sendToServer(new MessageSwingEffects());
             }
@@ -314,10 +298,6 @@ public class AdvancedCombatSystem
 
         return Math.sqrt((deltaX * deltaX) + (deltaY * deltaY) + (deltaZ * deltaZ));
     }
-
-    /*public static LivingEntity[] getEntitesNearby(){
-        // TODO detect skeletons nearby to draw bow indicator above them
-    }*/
 }
 
 class LivingEntityFilter implements Predicate<Entity>{

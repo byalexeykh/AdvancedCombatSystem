@@ -1,7 +1,15 @@
 package com.byalexeykh.advancedcombatsystem.items;
 
+import com.byalexeykh.advancedcombatsystem.ToolType;
+import com.byalexeykh.advancedcombatsystem.config.DefaultsConfigObj;
 import net.minecraft.block.BlockState;
+import net.minecraft.block.Blocks;
+import net.minecraft.block.material.Material;
+import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.item.*;
+import net.minecraft.tags.BlockTags;
+
+import java.util.HashMap;
 
 public class ACSAttributesContainer {
     public final float ANGLE;
@@ -11,6 +19,7 @@ public class ACSAttributesContainer {
     public final int MAX_COMBO_NUM;
     public final double SPEED_REDUCE_MODIFIER;
     public final float COMBO_CHARGING_SPEED_BOUNS;
+    private static HashMap<ToolType, ACSAttributesContainer> defaultContainers = new HashMap<ToolType, ACSAttributesContainer>();
     public ACSAttributesContainer(float angle, float range, float neededBackswingTicks, float minBackswingTicks, int maxComboNum, double speedReduceModifier, float comboChargingSpeedBonus){
         this.ANGLE = angle;
         this.RANGE = range;
@@ -28,12 +37,26 @@ public class ACSAttributesContainer {
         return new ACSAttributesContainer(30, 6, 6, 3, 6, -0.03d, 0);
     }
 
-    public static boolean canDestroyBySwing(Item item, BlockState block){
+    public static void setDefaults(DefaultsConfigObj[] defaultContainersFromConfig) {
+        for(DefaultsConfigObj cfgObj : defaultContainersFromConfig){
+            defaultContainers.put(cfgObj.Type, new ACSAttributesContainer(cfgObj.Angle, cfgObj.Range, 0, cfgObj.Min_backswing_ticks_in_percents, cfgObj.Max_combo_num, cfgObj.Speed_reduction_modifier, cfgObj.Combo_charge_speed_bonus));
+        }
+    }
+
+    private static boolean canDestroyBySwingDefault(BlockState blockState){
+        Material material = blockState.getMaterial();
+        return material != Material.PLANTS && material != Material.TALL_PLANTS && material != Material.CORAL && !blockState.isIn(BlockTags.LEAVES) && blockState.getBlock() != Blocks.COBWEB ? false : true;
+    }
+
+    public static boolean canDestroyBySwing(Item item, BlockState blockState){
         if(item instanceof AdvancedSwordItem){
-            return ((AdvancedSwordItem)item).canDestroyBySwing(block);
+            return ((AdvancedSwordItem)item).canDestroyBySwing(blockState);
         }
         else if(item instanceof AdvancedHoeItem){
-            return ((AdvancedHoeItem)item).canDestroyBySwing(block);
+            return ((AdvancedHoeItem)item).canDestroyBySwing(blockState);
+        }
+        else if(item instanceof  SwordItem){
+            return canDestroyBySwingDefault(blockState);
         }
         else return false;
     }
@@ -41,27 +64,62 @@ public class ACSAttributesContainer {
     /**
      * returns ACS attributes container form item
      * */
-    public static ACSAttributesContainer get(Item item){
-        if(item instanceof AdvancedTiredItem){
-            return ((AdvancedTiredItem)item).getACSAttributes();
+    public static ACSAttributesContainer get(PlayerEntity player){
+        Item item = player.getHeldItemMainhand().getItem();
+        if(item instanceof AdvancedTieredItem){
+            return ((AdvancedTieredItem)item).getACSAttributes();
         }
         else if(item instanceof SwordItem){
-            return new ACSAttributesContainer (50, 7, 16, 5, 4, -0.01d, 0.2f);
+            ACSAttributesContainer container = defaultContainers.get(ToolType.SWORD);
+            return new ACSAttributesContainer (container.ANGLE, container.RANGE, player.getCooldownPeriod(), player.getCooldownPeriod() * (container.MIN_BACKSWING_TICKS / 100), container.MAX_COMBO_NUM, container.SPEED_REDUCE_MODIFIER, container.COMBO_CHARGING_SPEED_BOUNS);
         }
         else if(item instanceof PickaxeItem){
-            return new ACSAttributesContainer (30, 5, 20, 7, 2, -0.025d, 0.2f);
+            ACSAttributesContainer container = defaultContainers.get(ToolType.PICKAXE);
+            return new ACSAttributesContainer (container.ANGLE, container.RANGE, player.getCooldownPeriod(), player.getCooldownPeriod() * (container.MIN_BACKSWING_TICKS / 100), container.MAX_COMBO_NUM, container.SPEED_REDUCE_MODIFIER, container.COMBO_CHARGING_SPEED_BOUNS);
         }
         else if(item instanceof AxeItem){
-            return new ACSAttributesContainer(40, 6, 30, 10, 2, -0.035d, 0.2f);
+            ACSAttributesContainer container = defaultContainers.get(ToolType.AXE);
+            return new ACSAttributesContainer (container.ANGLE, container.RANGE, player.getCooldownPeriod(), player.getCooldownPeriod() * (container.MIN_BACKSWING_TICKS / 100), container.MAX_COMBO_NUM, container.SPEED_REDUCE_MODIFIER, container.COMBO_CHARGING_SPEED_BOUNS);
         }
         else if(item instanceof ShovelItem){
-            return new ACSAttributesContainer(40, 6, 20, 6, 3, -0.025d, 0.2f);
+            ACSAttributesContainer container = defaultContainers.get(ToolType.SHOVEL);
+            return new ACSAttributesContainer (container.ANGLE, container.RANGE, player.getCooldownPeriod(), player.getCooldownPeriod() * (container.MIN_BACKSWING_TICKS / 100), container.MAX_COMBO_NUM, container.SPEED_REDUCE_MODIFIER, container.COMBO_CHARGING_SPEED_BOUNS);
         }
         else if(item instanceof HoeItem){
-            return new ACSAttributesContainer(70, 5, 20, 8, 2, -0.025d, 0.2f);
+            ACSAttributesContainer container = defaultContainers.get(ToolType.HOE);
+            return new ACSAttributesContainer (container.ANGLE, container.RANGE, player.getCooldownPeriod(), player.getCooldownPeriod() * (container.MIN_BACKSWING_TICKS / 100), container.MAX_COMBO_NUM, container.SPEED_REDUCE_MODIFIER, container.COMBO_CHARGING_SPEED_BOUNS);
         }
         else{
-            return getDefaultContainer();
+            return ACSAttributes.getHandsAttributes();
+        }
+    }
+
+    public static ACSAttributesContainer get(Item item){
+        if(item instanceof AdvancedTieredItem){
+            return ((AdvancedTieredItem)item).getACSAttributes();
+        }
+        else if(item instanceof SwordItem){
+            ACSAttributesContainer container = defaultContainers.get(ToolType.SWORD);
+            return new ACSAttributesContainer (container.ANGLE, container.RANGE, 0, 0, container.MAX_COMBO_NUM, container.SPEED_REDUCE_MODIFIER, container.COMBO_CHARGING_SPEED_BOUNS);
+        }
+        else if(item instanceof PickaxeItem){
+            ACSAttributesContainer container = defaultContainers.get(ToolType.PICKAXE);
+            return new ACSAttributesContainer (container.ANGLE, container.RANGE, 0, 0, container.MAX_COMBO_NUM, container.SPEED_REDUCE_MODIFIER, container.COMBO_CHARGING_SPEED_BOUNS);
+        }
+        else if(item instanceof AxeItem){
+            ACSAttributesContainer container = defaultContainers.get(ToolType.AXE);
+            return new ACSAttributesContainer (container.ANGLE, container.RANGE, 0, 0, container.MAX_COMBO_NUM, container.SPEED_REDUCE_MODIFIER, container.COMBO_CHARGING_SPEED_BOUNS);
+        }
+        else if(item instanceof ShovelItem){
+            ACSAttributesContainer container = defaultContainers.get(ToolType.SHOVEL);
+            return new ACSAttributesContainer (container.ANGLE, container.RANGE, 0, 0, container.MAX_COMBO_NUM, container.SPEED_REDUCE_MODIFIER, container.COMBO_CHARGING_SPEED_BOUNS);
+        }
+        else if(item instanceof HoeItem){
+            ACSAttributesContainer container = defaultContainers.get(ToolType.HOE);
+            return new ACSAttributesContainer (container.ANGLE, container.RANGE, 0, 0, container.MAX_COMBO_NUM, container.SPEED_REDUCE_MODIFIER, container.COMBO_CHARGING_SPEED_BOUNS);
+        }
+        else{
+            return ACSAttributes.getHandsAttributes();
         }
     }
 

@@ -2,12 +2,12 @@ package com.byalexeykh.advancedcombatsystem;
 
 import com.byalexeykh.advancedcombatsystem.items.ACSAttributesContainer;
 import com.byalexeykh.advancedcombatsystem.items.AdvancedSwordItem;
-import com.byalexeykh.advancedcombatsystem.items.AdvancedTiredItem;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.settings.AttackIndicatorStatus;
 import net.minecraft.entity.SharedMonsterAttributes;
 import net.minecraft.entity.ai.attributes.AttributeModifier;
 import net.minecraft.item.Item;
+import net.minecraft.item.SwordItem;
 import net.minecraft.util.Hand;
 import net.minecraft.util.math.RayTraceResult;
 import net.minecraft.util.math.Vec3d;
@@ -76,9 +76,10 @@ public class ACSInputHandler {
             }
         }
         Item currentItem = mc.player.getHeldItemMainhand().getItem();
-        neededBackswingTicks = ACSAttributesContainer.get(currentItem).NEEDED_BACKSWING_TICKS;
-        minBackswingTicks = ACSAttributesContainer.get(currentItem).MIN_BACKSWING_TICKS;
-        combosAvailable = ACSAttributesContainer.get(currentItem).MAX_COMBO_NUM;
+        neededBackswingTicks = ACSAttributesContainer.get(mc.player).NEEDED_BACKSWING_TICKS;
+        minBackswingTicks = ACSAttributesContainer.get(mc.player).MIN_BACKSWING_TICKS;
+        combosAvailable = ACSAttributesContainer.get(mc.player).MAX_COMBO_NUM;
+        isHoldingSword = mc.player.getHeldItem(Hand.MAIN_HAND).getItem() instanceof AdvancedSwordItem || mc.player.getHeldItem(Hand.MAIN_HAND).getItem() instanceof SwordItem;
     }
 
     // Main mechanics ==================================================================================================
@@ -87,7 +88,6 @@ public class ACSInputHandler {
     public void onPlayerTick(TickEvent.PlayerTickEvent event){
         if(mc.player != null) {
             if (event.phase == TickEvent.Phase.START) {
-                isHoldingSword = mc.player.getHeldItem(Hand.MAIN_HAND).getItem() instanceof AdvancedSwordItem;
                 mc.gameSettings.attackIndicator = AttackIndicatorStatus.OFF;
                 if (isAccumulatingPower) {
                     event.player.isSwingInProgress = false;
@@ -97,14 +97,14 @@ public class ACSInputHandler {
                 }
             } else if (event.phase == TickEvent.Phase.END && event.player.world.isRemote) {
                 // while LMB down ======================================================================================
-                AttributeModifier REDUCE_SPEED = new AttributeModifier(REDUCE_SPEED_UUID, "ASCReduceSpeed", ACSAttributesContainer.get(mc.player.getHeldItemMainhand().getItem()).SPEED_REDUCE_MODIFIER, AttributeModifier.Operation.ADDITION);
+                AttributeModifier REDUCE_SPEED = new AttributeModifier(REDUCE_SPEED_UUID, "ASCReduceSpeed", ACSAttributesContainer.get(mc.player).SPEED_REDUCE_MODIFIER, AttributeModifier.Operation.ADDITION);
                 if (mc.gameSettings.keyBindAttack.isKeyDown() && (!isAimingAtBlock || isHoldingSword || isBattleMode)) {
                     isMouseLeftKeyPressed = true;
                     isMouseLeftKeyUp = false;
 
                     if (ticksLMBPressed < neededBackswingTicks) {
                         isAccumulatingPower = true;
-                        ticksLMBPressed = ticksLMBPressed + 1 + ACSAttributesContainer.get(mc.player.getHeldItemMainhand().getItem()).COMBO_CHARGING_SPEED_BOUNS * comboNum;
+                        ticksLMBPressed = ticksLMBPressed + 1 + ACSAttributesContainer.get(mc.player).COMBO_CHARGING_SPEED_BOUNS * comboNum;
                     }
 
                     if (ticksLMBPressed >= neededBackswingTicks) {
@@ -116,7 +116,7 @@ public class ACSInputHandler {
                             isComboAvailable = false;
                             ACSGuiHandler.drawComboIndicator = false;
                             mc.player.setSprinting(false);
-                            if (!mc.player.getAttribute(SharedMonsterAttributes.MOVEMENT_SPEED).hasModifier(REDUCE_SPEED) && mc.player.getHeldItemMainhand().getItem() instanceof AdvancedTiredItem) {
+                            if (!mc.player.getAttribute(SharedMonsterAttributes.MOVEMENT_SPEED).hasModifier(REDUCE_SPEED)) {
                                 mc.player.getAttribute(SharedMonsterAttributes.MOVEMENT_SPEED).applyModifier(REDUCE_SPEED);
                             }
                         }
@@ -153,7 +153,7 @@ public class ACSInputHandler {
                             mc.player.swingArm(Hand.MAIN_HAND);
                             MouseLeftKeyLastValue = isMouseLeftKeyPressed;
 
-                            // Combo processing ============================================================================
+                            // Combo processing ========================================================================
                             if (isComboAvailable) {
                                 ticksCanComboCurrent = 0;
                                 ticksLMBPressed = 0;
@@ -201,7 +201,7 @@ public class ACSInputHandler {
                     }
                 }
 
-                // Combo timers ============================================================================================
+                // Combo timers ========================================================================================
                 if (isComboRuined) {
                     if (ticksLMBPressed > 0) {
                         ticksLMBPressed -= 2;

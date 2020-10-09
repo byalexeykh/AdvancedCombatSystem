@@ -6,16 +6,15 @@ import net.minecraft.item.IItemTier;
 import net.minecraft.item.ItemTier;
 
 public class jsonACSAttributesContainer extends ACSAttributesContainer {
-    public final String modid;
-    public final String name;
     public final ToolType type;
-    public final ItemTier tier;
-    public jsonACSAttributesContainer(String modid, String name, ItemTier tier, ToolType type, float angle, float range, float neededBackswingTicks, float minBackswingTicks, int maxComboNum, double speedReduceModifier, float comboChargingSeedBonus) {
+    public jsonACSAttributesContainer(ToolType type, float angle, float range, float neededBackswingTicks, float minBackswingTicks, int maxComboNum, double speedReduceModifier, float comboChargingSeedBonus) {
         super(angle, range, neededBackswingTicks, minBackswingTicks, maxComboNum, speedReduceModifier, comboChargingSeedBonus);
-        this.modid = modid;
-        this.tier = tier;
         this.type = type;
-        this.name = name;
+    }
+
+    public jsonACSAttributesContainer(ToolType type, ACSAttributesContainer container) {
+        super(container.ANGLE, container.RANGE, container.NEEDED_BACKSWING_TICKS, container.MIN_BACKSWING_TICKS, container.MAX_COMBO_NUM, container.SPEED_REDUCE_MODIFIER, container.COMBO_CHARGING_SPEED_BOUNS);
+        this.type = type;
     }
 
     public ACSAttributesContainer toACSAttributesContainer(){

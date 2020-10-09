@@ -1,8 +1,8 @@
 {
   "key.categories.advancedcombatsystem" : "Advanced Combat System",
   "key.BattleModeToggle" : "Toggle battle mode",
-  "items.description.angle" : "Angle",
-  "items.description.range" : "Range",
-  "items.description.maxcombos" : "Max combos",
-  "items.description.chargingaccelerator" : "Combo bonus"
+  "items.description.angle" : " Angle",
+  "items.description.range" : " Range",
+  "items.description.maxcombos" : " Max combos",
+  "items.description.chargingaccelerator" : " Combo bonus"
 }
