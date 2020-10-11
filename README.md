@@ -5,6 +5,8 @@ https://www.curseforge.com/minecraft/mc-mods/advanced-combat-system
 # Configs
 Config files are located in *config/advancedcombatsystem/* and have the *.json* extension. Files with this extension can be changed using standard Windows tools (for example Notepad)
 
+**Dedicated server configs override client configs.**
+
 ## How to change configs correctly:
 
 ### advancedcombatsystem-defaults:
