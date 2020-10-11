@@ -1,7 +1,11 @@
 {
-  "homepage": "https://www.curseforge.com/minecraft/mc-mods/advanced-combat-system",
+  "homepage": "https://raw.githubusercontent.com/byalexeykh/AdvancedCombatSystem/master/src/main/resources/update.json",
   "promos": {
     "1.15.2-latest": "1.15.2-0.2.1",
     "1.15.2-recommended": "1.15.2-0.2.1"
+  },
+  "1.15.2": {
+    "0.2.1": "Configs added",
+    "0.2.0": "Main mechanics added, first release"
   }
 }
