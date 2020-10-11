@@ -87,11 +87,12 @@ public class ACSInputHandler {
     @OnlyIn(Dist.CLIENT)
     public void onPlayerTick(TickEvent.PlayerTickEvent event){
         if(mc.player != null) {
+            if (isAccumulatingPower) {
+                event.player.isSwingInProgress = false;
+            }
+
             if (event.phase == TickEvent.Phase.START) {
                 mc.gameSettings.attackIndicator = AttackIndicatorStatus.OFF;
-                if (isAccumulatingPower) {
-                    event.player.isSwingInProgress = false;
-                }
                 if (mc.objectMouseOver != null){
                     isAimingAtBlock = mc.objectMouseOver.getType() == RayTraceResult.Type.BLOCK;
                 }

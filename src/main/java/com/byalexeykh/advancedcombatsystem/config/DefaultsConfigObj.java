@@ -21,4 +21,9 @@ public class DefaultsConfigObj {
         this.Speed_reduction_modifier = container.SPEED_REDUCE_MODIFIER;
         this.Combo_charge_speed_bonus = container.COMBO_CHARGING_SPEED_BOUNS;
     }
+
+    @Override
+    public String toString() {
+        return "DefaultsConfigObj for items of type: " + Type;
+    }
 }

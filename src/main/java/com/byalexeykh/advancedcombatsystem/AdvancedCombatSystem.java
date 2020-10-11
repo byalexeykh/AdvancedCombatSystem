@@ -7,6 +7,7 @@ import com.byalexeykh.advancedcombatsystem.config.jsonACSAttributesContainer;
 import com.byalexeykh.advancedcombatsystem.items.*;
 import com.byalexeykh.advancedcombatsystem.networking.NetworkHandler;
 import com.byalexeykh.advancedcombatsystem.networking.messages.MessageDestroyBlock;
+import com.byalexeykh.advancedcombatsystem.networking.messages.MessageSendDefaultsConfig;
 import com.byalexeykh.advancedcombatsystem.networking.messages.MessageSwing;
 import com.byalexeykh.advancedcombatsystem.networking.messages.MessageSwingEffects;
 import com.google.gson.Gson;
@@ -17,6 +18,7 @@ import net.minecraft.client.util.InputMappings;
 import net.minecraft.enchantment.EnchantmentHelper;
 import net.minecraft.entity.*;
 import net.minecraft.entity.player.PlayerEntity;
+import net.minecraft.entity.player.ServerPlayerEntity;
 import net.minecraft.entity.projectile.ProjectileHelper;
 import net.minecraft.item.*;
 import net.minecraft.particles.ParticleTypes;
@@ -29,6 +31,7 @@ import net.minecraftforge.api.distmarker.OnlyIn;
 import net.minecraftforge.client.settings.KeyConflictContext;
 import net.minecraftforge.client.settings.KeyModifier;
 import net.minecraftforge.common.MinecraftForge;
+import net.minecraftforge.event.entity.player.PlayerEvent;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
 import net.minecraftforge.fml.client.registry.ClientRegistry;
 import net.minecraftforge.fml.common.Mod;
@@ -37,6 +40,8 @@ import net.minecraftforge.fml.event.lifecycle.FMLDedicatedServerSetupEvent;
 import net.minecraftforge.fml.javafmlmod.FMLJavaModLoadingContext;
 import net.minecraftforge.fml.loading.FMLEnvironment;
 import net.minecraftforge.fml.loading.FMLPaths;
+import net.minecraftforge.fml.network.NetworkEvent;
+import net.minecraftforge.fml.network.PacketDistributor;
 import net.minecraftforge.registries.DeferredRegister;
 import net.minecraftforge.registries.ForgeRegistries;
 import org.apache.logging.log4j.Level;
@@ -45,7 +50,10 @@ import org.apache.logging.log4j.Logger;
 import org.lwjgl.glfw.GLFW;
 
 import java.io.File;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.function.Predicate;
+import java.util.function.Supplier;
 
 @Mod("advancedcombatsystem")
 public class AdvancedCombatSystem
@@ -62,14 +70,15 @@ public class AdvancedCombatSystem
     public static Logger LOGGER = LogManager.getLogger();
     public static CommonConfigObj commonCfgObj;
     private static Gson gson = new GsonBuilder().setPrettyPrinting().create();
-    private static DefaultsConfigObj[] defaultACScontainers;
+    public static DefaultsConfigObj[] defaultACScontainers;
+    public static List<DefaultsConfigObj> defaultServerACScontainers = new ArrayList<>();
+    private static final String commonConfigPath = FMLPaths.CONFIGDIR.get().resolve("advancedcombatsystem/advancedcombatsystem-common.json").toString();
+    private static final String defaultsConfigPath = FMLPaths.CONFIGDIR.get().resolve("advancedcombatsystem/advancedcombatsystem-defaults.json").toString();
+    //private static final String itemsConfigPath = FMLPaths.CONFIGDIR.get().resolve("advancedcombatsystem/advancedcombatsystem-items.json").toString();
 
     public AdvancedCombatSystem(){
         LOGGER.debug("Advanced Combat System initialization...");
         MinecraftForge.EVENT_BUS.register(this);
-        String commonConfigPath = FMLPaths.CONFIGDIR.get().resolve("advancedcombatsystem/advancedcombatsystem-common.json").toString();
-        String defaultsConfigPath = FMLPaths.CONFIGDIR.get().resolve("advancedcombatsystem/advancedcombatsystem-defaults.json").toString();
-        //String itemsConfigPath = FMLPaths.CONFIGDIR.get().resolve("advancedcombatsystem/advancedcombatsystem-items.json").toString();
 
         LOGGER.debug("[ACS] Reading configs");
         // READING COMMON CONFIG =======================================================================================
@@ -93,7 +102,6 @@ public class AdvancedCombatSystem
             Config.initCommonConfig(gson, commonConfigPath);
         }
         defaultACScontainers = Config.readDefaultsConfig(gson, defaultsConfigPath);
-        ACSAttributesContainer.setDefaults(defaultACScontainers);
 
         /*// READING ITEMS CONFIG ========================================================================================
         if(!new File(itemsConfigPath).exists() || commonConfig.getResetConfigsToDefault()){
@@ -111,6 +119,8 @@ public class AdvancedCombatSystem
         else{
             FMLJavaModLoadingContext.get().getModEventBus().addListener(this::onServerSetup);
         }
+
+        FMLJavaModLoadingContext.get().getModEventBus().addListener(this::onPlayerConnectingToServer);
         //VANILLA_ITEMS.register(FMLJavaModLoadingContext.get().getModEventBus());
     }
 
@@ -280,6 +290,25 @@ public class AdvancedCombatSystem
             catch(Exception e){
                 LOGGER.error("[ACS] ERROR while sending MessageSwingEffects to server" + e);
             }
+        }
+    }
+
+    @SubscribeEvent
+    public void onPlayerConnectingToServer(PlayerEvent.PlayerLoggedInEvent event){
+        if(FMLEnvironment.dist == Dist.DEDICATED_SERVER){
+            try{
+                DefaultsConfigObj[] configObjs = Config.readDefaultsConfig(gson, defaultsConfigPath);
+                MessageSendDefaultsConfig msg;
+                Supplier<ServerPlayerEntity> playerSup = () -> (ServerPlayerEntity) event.getPlayer();
+                for(DefaultsConfigObj configObj : configObjs){
+                    msg = new MessageSendDefaultsConfig(configObj);
+                    NetworkHandler.INSTANCE.send(PacketDistributor.PLAYER.with(playerSup), msg);
+                }
+            }catch (Exception e){
+                LOGGER.error("[ACS] Error while sending configs to player " + event.getPlayer().getDisplayName() + " " + e);
+            }
+        }else{
+            ACSAttributesContainer.setDefaults(defaultACScontainers);
         }
     }
 

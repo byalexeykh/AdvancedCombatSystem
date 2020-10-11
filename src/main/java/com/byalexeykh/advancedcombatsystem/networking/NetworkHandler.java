@@ -1,6 +1,7 @@
 package com.byalexeykh.advancedcombatsystem.networking;
 
 import com.byalexeykh.advancedcombatsystem.networking.messages.MessageDestroyBlock;
+import com.byalexeykh.advancedcombatsystem.networking.messages.MessageSendDefaultsConfig;
 import com.byalexeykh.advancedcombatsystem.networking.messages.MessageSwing;
 import com.byalexeykh.advancedcombatsystem.networking.messages.MessageSwingEffects;
 import net.minecraft.util.ResourceLocation;
@@ -30,10 +31,11 @@ public class NetworkHandler {
     private static final byte SWING_ID = 35;
     private static final byte DESTROY_BLOCK_ID = 36;
     private static final byte PLAY_SWING_EFFECTS_ID = 37;
+    private static final byte SEND_CONFIG_TO_CLIENT_ID = 38;
 
     @SubscribeEvent
     public static void commonSetup(FMLCommonSetupEvent event){
-        LOGGER.log(Level.INFO, "[ACS] Registering messages...");
+        LOGGER.debug("[ACS] Registering messages...");
         INSTANCE = NetworkRegistry.newSimpleChannel(
                 new ResourceLocation("advancedcombatsystem", "acschannel"),
                 () -> PROTOCOL_VERSION,
@@ -65,6 +67,14 @@ public class NetworkHandler {
                 MessageSwingEffects::encode,
                 MessageSwingEffects::decode,
                 ServerMessagesHandler::OnMessageSwingEffectsReceived
+        );
+
+        // Send configs to server message register
+        INSTANCE.registerMessage(SEND_CONFIG_TO_CLIENT_ID,
+                MessageSendDefaultsConfig.class,
+                MessageSendDefaultsConfig::encode,
+                MessageSendDefaultsConfig::decode,
+                ClientMessagesHandler::OnMessageSendDefaultsConfigReceived
         );
     }
 }

@@ -3,19 +3,11 @@ package com.byalexeykh.advancedcombatsystem.config;
 import com.byalexeykh.advancedcombatsystem.AdvancedCombatSystem;
 import com.byalexeykh.advancedcombatsystem.ToolType;
 import com.byalexeykh.advancedcombatsystem.items.ACSAttributesContainer;
-import com.electronwill.nightconfig.core.file.CommentedFileConfig;
-import com.electronwill.nightconfig.core.io.WritingMode;
 import com.google.gson.Gson;
-import com.google.gson.JsonObject;
-import com.google.gson.stream.JsonReader;
-import net.minecraft.item.ItemTier;
-import net.minecraftforge.common.ForgeConfigSpec;
-import org.apache.logging.log4j.Level;
 
 import java.io.File;
 import java.io.FileReader;
 import java.io.FileWriter;
-import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 

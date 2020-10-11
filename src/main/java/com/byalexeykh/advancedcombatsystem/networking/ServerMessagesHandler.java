@@ -1,6 +1,7 @@
 package com.byalexeykh.advancedcombatsystem.networking;
 
 import com.byalexeykh.advancedcombatsystem.networking.messages.MessageDestroyBlock;
+import com.byalexeykh.advancedcombatsystem.networking.messages.MessageSendDefaultsConfig;
 import com.byalexeykh.advancedcombatsystem.networking.messages.MessageSwing;
 import com.byalexeykh.advancedcombatsystem.networking.messages.MessageSwingEffects;
 import net.minecraft.entity.Entity;
@@ -96,7 +97,7 @@ public class ServerMessagesHandler {
         ctx.setPacketHandled(true);
 
         if(sideReceived != LogicalSide.SERVER){
-            LOGGER.error("MessageDestroyBlock received on wrong side!: " + sideReceived);
+            LOGGER.error("MessageSwingEffects received on wrong side!: " + sideReceived);
             return;
         }
 
