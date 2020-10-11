@@ -90,7 +90,6 @@ public class AdvancedCombatSystem
         else{
             commonCfgObj = Config.readCommonConfig(gson, commonConfigPath);
             if(commonCfgObj.reset_Configs_To_Default){
-                commonCfgObj = Config.getDefaultCommonConfig();
                 Config.initCommonConfig(gson, commonConfigPath);
             }
         }
@@ -100,6 +99,7 @@ public class AdvancedCombatSystem
             Config.createFile(defaultsConfigPath);
             Config.initDefaultsConfig(gson, defaultsConfigPath);
             Config.initCommonConfig(gson, commonConfigPath);
+            commonCfgObj = Config.getDefaultCommonConfig();
         }
         defaultACScontainers = Config.readDefaultsConfig(gson, defaultsConfigPath);
 
@@ -300,12 +300,13 @@ public class AdvancedCombatSystem
                 DefaultsConfigObj[] configObjs = Config.readDefaultsConfig(gson, defaultsConfigPath);
                 MessageSendDefaultsConfig msg;
                 Supplier<ServerPlayerEntity> playerSup = () -> (ServerPlayerEntity) event.getPlayer();
+                LOGGER.info("[ACS] Sending configs to " + event.getPlayer().getDisplayName().getString());
                 for(DefaultsConfigObj configObj : configObjs){
                     msg = new MessageSendDefaultsConfig(configObj);
                     NetworkHandler.INSTANCE.send(PacketDistributor.PLAYER.with(playerSup), msg);
                 }
             }catch (Exception e){
-                LOGGER.error("[ACS] Error while sending configs to player " + event.getPlayer().getDisplayName() + " " + e);
+                LOGGER.error("[ACS] Error while sending configs to player " + event.getPlayer().getDisplayName().getString() + " " + e);
             }
         }else{
             ACSAttributesContainer.setDefaults(defaultACScontainers);
