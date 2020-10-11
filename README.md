@@ -8,7 +8,7 @@ Config files are located in *config/advancedcombatsystem/* and have the *.json* 
 ## How to change configs correctly:
 
 ### advancedcombatsystem-defaults:
-This config contains attributes for each item type and for a hand. *(Applies to items from vanilla and other mods)*
+This config contains attributes for each item type and for a hand. *(Applies to items from vanilla and other mods that are not natively supported)*
 ```
 {
     "Type": "PICKAXE",
