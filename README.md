@@ -31,6 +31,7 @@ Speed_reduction_modifier | Value corresponding for change of player speed when p
 Combo_charge_speed_bonus | The value that increases the rate of power accumulation if combo stage is passed. Negative values will slow down rate of power accumulation.
 
 *picture 1:*
+![picture 1](https://raw.githubusercontent.com/byalexeykh/AdvancedCombatSystem/master/readmeimages/readme_angle.png)
 
 ### advancedcombatsystem-common:
 This config contains general mod settings.
