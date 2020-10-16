@@ -18,7 +18,7 @@ public class DefaultsConfigObj {
         this.Range = container.RANGE;
         this.Min_backswing_ticks_in_percents = container.MIN_BACKSWING_TICKS;
         this.Max_combo_num = container.MAX_COMBO_NUM;
-        this.Speed_reduction_modifier = container.SPEED_REDUCE_MODIFIER;
+        this.Speed_reduction_modifier = container.SPEED_REDUCTION_MODIFIER;
         this.Combo_charge_speed_bonus = container.COMBO_CHARGING_SPEED_BOUNS;
     }
 

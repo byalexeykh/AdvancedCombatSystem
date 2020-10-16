@@ -1,15 +1,9 @@
 package com.byalexeykh.advancedcombatsystem;
 
-import com.byalexeykh.advancedcombatsystem.config.CommonConfigObj;
-import com.byalexeykh.advancedcombatsystem.config.Config;
-import com.byalexeykh.advancedcombatsystem.config.DefaultsConfigObj;
-import com.byalexeykh.advancedcombatsystem.config.jsonACSAttributesContainer;
+import com.byalexeykh.advancedcombatsystem.config.*;
 import com.byalexeykh.advancedcombatsystem.items.*;
 import com.byalexeykh.advancedcombatsystem.networking.NetworkHandler;
-import com.byalexeykh.advancedcombatsystem.networking.messages.MessageDestroyBlock;
-import com.byalexeykh.advancedcombatsystem.networking.messages.MessageSendDefaultsConfig;
-import com.byalexeykh.advancedcombatsystem.networking.messages.MessageSwing;
-import com.byalexeykh.advancedcombatsystem.networking.messages.MessageSwingEffects;
+import com.byalexeykh.advancedcombatsystem.networking.messages.*;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import net.minecraft.block.*;
@@ -40,25 +34,22 @@ import net.minecraftforge.fml.event.lifecycle.FMLDedicatedServerSetupEvent;
 import net.minecraftforge.fml.javafmlmod.FMLJavaModLoadingContext;
 import net.minecraftforge.fml.loading.FMLEnvironment;
 import net.minecraftforge.fml.loading.FMLPaths;
-import net.minecraftforge.fml.network.NetworkEvent;
 import net.minecraftforge.fml.network.PacketDistributor;
-import net.minecraftforge.registries.DeferredRegister;
-import net.minecraftforge.registries.ForgeRegistries;
 import org.apache.logging.log4j.Level;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.lwjgl.glfw.GLFW;
 
 import java.io.File;
-import java.util.ArrayList;
-import java.util.List;
+import java.util.*;
 import java.util.function.Predicate;
 import java.util.function.Supplier;
 
 @Mod("advancedcombatsystem")
 public class AdvancedCombatSystem
 {
-    //private static final DeferredRegister<Item> VANILLA_ITEMS = DeferredRegister.create(ForgeRegistries.ITEMS, "minecraft");
+    //public static HashMap<String, DeferredRegister<Item>> ITEMS_DYNAMIC_REGISTER = new HashMap<String, DeferredRegister<Item>>();
+    //public static List<RegistryObject<Item>> ITEMS_TO_REGISTER = new ArrayList<>();
 
     //private static final DeferredRegister<EntityType<?>> MOD_ENTITIES = DeferredRegister.create(ForgeRegistries.ENTITIES, AdvancedCombatSystem.MODID);
     //public static final RegistryObject<EntityType<SkeletonWarriorEntity>> SKELETON_WARRIOR = MOD_ENTITIES.register("skeleton_warrior", () -> AdvancedEntities.skeleton_warrior);
@@ -69,12 +60,15 @@ public class AdvancedCombatSystem
     public static final String MODID = "advancedcombatsystem";
     public static Logger LOGGER = LogManager.getLogger();
     public static CommonConfigObj commonCfgObj;
-    private static Gson gson = new GsonBuilder().setPrettyPrinting().create();
     public static DefaultsConfigObj[] defaultACScontainers;
+    public static ItemRegisterContainer[] itemsRegisterContainers;
+    public static List<ItemRegisterContainer> itemsRegisterServerContainers = new ArrayList<>();
     public static List<DefaultsConfigObj> defaultServerACScontainers = new ArrayList<>();
+
+    private static Gson gson = new GsonBuilder().setPrettyPrinting().create();
     private static final String commonConfigPath = FMLPaths.CONFIGDIR.get().resolve("advancedcombatsystem/advancedcombatsystem-common.json").toString();
     private static final String defaultsConfigPath = FMLPaths.CONFIGDIR.get().resolve("advancedcombatsystem/advancedcombatsystem-defaults.json").toString();
-    //private static final String itemsConfigPath = FMLPaths.CONFIGDIR.get().resolve("advancedcombatsystem/advancedcombatsystem-items.json").toString();
+    private static final String AttributesByIdConfigPath = FMLPaths.CONFIGDIR.get().resolve("advancedcombatsystem/advancedcombatsystem-attributesbyid.json").toString();
 
     public AdvancedCombatSystem(){
         LOGGER.debug("Advanced Combat System initialization...");
@@ -95,22 +89,46 @@ public class AdvancedCombatSystem
         }
 
         // READING DEFAULTS CONFIG =====================================================================================
-        if(!new File(defaultsConfigPath).exists() || commonCfgObj.getResetConfigsToDefault()){
+        if(!new File(defaultsConfigPath).exists() || commonCfgObj.reset_Configs_To_Default){
             Config.createFile(defaultsConfigPath);
             Config.initDefaultsConfig(gson, defaultsConfigPath);
             Config.initCommonConfig(gson, commonConfigPath);
             commonCfgObj = Config.getDefaultCommonConfig();
         }
         defaultACScontainers = Config.readDefaultsConfig(gson, defaultsConfigPath);
+        ACSAttributesContainer.setDefaults(defaultACScontainers);
 
-        /*// READING ITEMS CONFIG ========================================================================================
-        if(!new File(itemsConfigPath).exists() || commonConfig.getResetConfigsToDefault()){
-            Config.createFile(itemsConfigPath);
-            Config.initItemsConfig(gson, itemsConfigPath);
+        // READING AttributesById CONFIG ===============================================================================
+        if((!new File(AttributesByIdConfigPath).exists() || commonCfgObj.reset_Configs_To_Default)){
+            Config.createFile(AttributesByIdConfigPath);
+            Config.initAttributesByIdConfig(gson, AttributesByIdConfigPath);
         }
-        ACSAttributes.loadAttributesFromConfig(Config.readItemsConfig(gson, itemsConfigPath));
+        itemsRegisterContainers = Config.readAttributesByIdConfig(gson, AttributesByIdConfigPath);
 
-        //AdvancedItems.registerAll(VANILLA_ITEMS);*/
+        /*if(!itemsRegisterContainers[0].name.equals("example_name")) {
+               List<String> modids = new ArrayList<>();
+                for (ItemRegisterContainer container : itemsRegisterContainers) {
+                    modids.add(container.modid);
+                }
+                Set<String> set = new HashSet<>(modids);
+                modids.clear();
+                modids.addAll(set);
+                LOGGER.info("[ACS-override] modid's whose items will be overrided: " + modids.toString());
+
+                for (String modid : modids) {
+                    ITEMS_DYNAMIC_REGISTER.put(modid, DeferredRegister.create(ForgeRegistries.ITEMS, modid));
+                }
+                for (Map.Entry<String, DeferredRegister<Item>> entry : ITEMS_DYNAMIC_REGISTER.entrySet()) {
+                    entry.getValue().register(FMLJavaModLoadingContext.get().getModEventBus());
+                }
+
+                for (ItemRegisterContainer container : itemsRegisterContainers) {
+                    LOGGER.info("[ACS-override] Overriding item [" + container.name + "] from mod [" + container.modid + "]");
+                    ITEMS_TO_REGISTER.add(ITEMS_DYNAMIC_REGISTER.get(container.modid).register(container.name, () -> AdvancedItems.instantiateItem(container)));
+                }
+            }else{
+                LOGGER.warn("[ACS-override] Found example item, it will not be registered. See advancedcombatsystem-override config.");
+            }*/
 
         // MOD SETUP ===================================================================================================
         if(FMLEnvironment.dist == Dist.CLIENT){
@@ -119,9 +137,7 @@ public class AdvancedCombatSystem
         else{
             FMLJavaModLoadingContext.get().getModEventBus().addListener(this::onServerSetup);
         }
-
         FMLJavaModLoadingContext.get().getModEventBus().addListener(this::onPlayerConnectingToServer);
-        //VANILLA_ITEMS.register(FMLJavaModLoadingContext.get().getModEventBus());
     }
 
     @SubscribeEvent
@@ -295,20 +311,30 @@ public class AdvancedCombatSystem
 
     @SubscribeEvent
     public void onPlayerConnectingToServer(PlayerEvent.PlayerLoggedInEvent event){
+        // If connecting to dedicated server then send configs from server to client
         if(FMLEnvironment.dist == Dist.DEDICATED_SERVER){
             try{
-                DefaultsConfigObj[] configObjs = Config.readDefaultsConfig(gson, defaultsConfigPath);
-                MessageSendDefaultsConfig msg;
+                DefaultsConfigObj[] defaultsConfigObjs = Config.readDefaultsConfig(gson, defaultsConfigPath);
+                MessageSendDefaultsConfig msgDefaultCfg;
                 Supplier<ServerPlayerEntity> playerSup = () -> (ServerPlayerEntity) event.getPlayer();
                 LOGGER.info("[ACS] Sending configs to " + event.getPlayer().getDisplayName().getString());
-                for(DefaultsConfigObj configObj : configObjs){
-                    msg = new MessageSendDefaultsConfig(configObj);
-                    NetworkHandler.INSTANCE.send(PacketDistributor.PLAYER.with(playerSup), msg);
+                for(DefaultsConfigObj configObj : defaultsConfigObjs){
+                    msgDefaultCfg = new MessageSendDefaultsConfig(configObj);
+                    NetworkHandler.INSTANCE.send(PacketDistributor.PLAYER.with(playerSup), msgDefaultCfg);
+                }
+
+                ItemRegisterContainer[] attrByIdConfigObjs = Config.readAttributesByIdConfig(gson, AttributesByIdConfigPath);
+                MessageSendAttributesByIdConfig msgAttrByIdCfg;
+                for(ItemRegisterContainer container : attrByIdConfigObjs){
+                    msgAttrByIdCfg = new MessageSendAttributesByIdConfig(container);
+                    NetworkHandler.INSTANCE.send(PacketDistributor.PLAYER.with(playerSup), msgAttrByIdCfg);
                 }
             }catch (Exception e){
                 LOGGER.error("[ACS] Error while sending configs to player " + event.getPlayer().getDisplayName().getString() + " " + e);
             }
         }else{
+            //if connecting to single player server then use local configs
+            ACSAttributes.loadAttributesByIdsFromConfig(itemsRegisterContainers);
             ACSAttributesContainer.setDefaults(defaultACScontainers);
         }
     }

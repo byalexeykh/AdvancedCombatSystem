@@ -26,15 +26,6 @@ public class AdvancedTieredItem extends TieredItem {
     }
 
     @Override
-    public void addInformation(ItemStack stack, @Nullable World worldIn, List<ITextComponent> tooltip, ITooltipFlag flagIn) {
-        super.addInformation(stack, worldIn, tooltip, flagIn);
-        tooltip.add(new TranslationTextComponent("items.description.angle", ACSattributes.ANGLE).appendText(" " + ACSattributes.ANGLE).applyTextStyle(TextFormatting.GREEN));
-        tooltip.add(new TranslationTextComponent("items.description.range", ACSattributes.RANGE).appendText(" " + ACSattributes.RANGE).applyTextStyle(TextFormatting.GREEN));
-        tooltip.add(new TranslationTextComponent("items.description.maxcombos", ACSattributes.MAX_COMBO_NUM).appendText(" " + ACSattributes.MAX_COMBO_NUM).applyTextStyle(TextFormatting.GREEN));
-        tooltip.add(new TranslationTextComponent("items.description.chargingaccelerator", ACSattributes.COMBO_CHARGING_SPEED_BOUNS).appendText(" " + ACSattributes.COMBO_CHARGING_SPEED_BOUNS).applyTextStyle(TextFormatting.GREEN));
-    }
-
-    @Override
     public String toString() {
         return "AdvancedTieredItem";
     }

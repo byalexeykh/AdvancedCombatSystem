@@ -1,50 +1,38 @@
 package com.byalexeykh.advancedcombatsystem.items;
 
-import com.byalexeykh.advancedcombatsystem.AdvancedCombatSystem;
-import com.byalexeykh.advancedcombatsystem.ToolType;
-import com.byalexeykh.advancedcombatsystem.config.jsonACSAttributesContainer;
-import com.google.gson.Gson;
-import net.minecraft.item.*;
+import net.minecraft.item.Item;
 import net.minecraftforge.registries.DeferredRegister;
-
-import javax.smartcardio.ATR;
-import java.io.FileWriter;
-import java.lang.reflect.Field;
-import java.util.ArrayList;
-import java.util.List;
 
 public class AdvancedItems {
 
-    private static List<Item> itemsToRegister = new ArrayList<>();
-
-    /*public static Item instantiateItem(jsonACSAttributesContainer AttrContainer){
+    /*public static Item instantiateItem(ItemRegisterContainer AttrContainer){
         Item itemToRegister;
         switch (AttrContainer.type) {
             case AXE:
-                itemToRegister =  new AdvancedAxeItem(AttrContainer.tier, 6, AttrContainer, new Item.Properties().group(ItemGroup.TOOLS));
+                itemToRegister =  new AdvancedAxeItem(AttrContainer.tier, AttrContainer.damage, AttrContainer, new Item.Properties().group(ItemGroup.TOOLS));
                 break;
                 case HOE:
                     itemToRegister = new AdvancedHoeItem(AttrContainer.tier, AttrContainer, new Item.Properties().group(ItemGroup.TOOLS));
                     break;
                 case SWORD:
-                    itemToRegister = new AdvancedSwordItem(AttrContainer.tier, 3, AttrContainer, new Item.Properties().group(ItemGroup.COMBAT));
+                    itemToRegister = new AdvancedSwordItem(AttrContainer.tier, AttrContainer.damage, AttrContainer, new Item.Properties().group(ItemGroup.COMBAT));
                     break;
                 case SHOVEL:
-                    itemToRegister = new AdvancedShovelItem(AttrContainer.tier, 1.5f, AttrContainer, new Item.Properties().group(ItemGroup.TOOLS));
+                    itemToRegister = new AdvancedShovelItem(AttrContainer.tier, AttrContainer.damage, AttrContainer, new Item.Properties().group(ItemGroup.TOOLS));
                     break;
                 case PICKAXE:
-                    itemToRegister = new AdvancedSwordItem(AttrContainer.tier, 1, AttrContainer, new Item.Properties().group(ItemGroup.TOOLS));
+                    itemToRegister = new AdvancedSwordItem(AttrContainer.tier, AttrContainer.damage, AttrContainer, new Item.Properties().group(ItemGroup.TOOLS));
                     break;
                 default:
                     itemToRegister = null;
-                    AdvancedCombatSystem.LOGGER.error("[ACS] Invalid tool type " + AttrContainer.tier + ", can't register item");
+                    AdvancedCombatSystem.LOGGER.error("[ACS] Invalid tool type " + AttrContainer.type + ", can't register item");
                     break;
             }
-            AdvancedCombatSystem.LOGGER.debug("[ACS] Initialized item from config: " + itemToRegister);
+            AdvancedCombatSystem.LOGGER.debug("[ACS] Initialized item from config: " + AttrContainer.name);
         return itemToRegister;
     }*/
     public static void registerAll(DeferredRegister<Item> DeferredRegister){
-        DeferredRegister.register("wooden_sword", () -> wooden_sword);
+        /*DeferredRegister.register("wooden_sword", () -> wooden_sword);
         DeferredRegister.register("golden_sword", () -> golden_sword);
         DeferredRegister.register("stone_sword", () -> stone_sword);
         DeferredRegister.register("iron_sword", () -> iron_sword);
@@ -72,10 +60,10 @@ public class AdvancedItems {
         DeferredRegister.register("golden_axe", () -> golden_axe);
         DeferredRegister.register("stone_axe", () -> stone_axe);
         DeferredRegister.register("iron_axe", () -> iron_axe);
-        DeferredRegister.register("diamond_axe", () -> diamond_axe);
+        DeferredRegister.register("diamond_axe", () -> diamond_axe);*/
     }
 
-    // SWORDS ==========================================================================================================
+    /*// SWORDS ==========================================================================================================
     public static final Item wooden_sword = new AdvancedSwordItem(
             ItemTier.WOOD,
             3,
@@ -243,5 +231,5 @@ public class AdvancedItems {
             1.5f,
             ACSAttributes.getShovelsAttributes(),
             new Item.Properties().group(ItemGroup.TOOLS).maxStackSize(1)
-    );
+    );*/
 }

@@ -41,6 +41,7 @@ public class ACSInputHandler {
     private static int comboNum = 0, combosAvailable = 4;
     private static Minecraft mc;
     private static UUID REDUCE_SPEED_UUID = UUID.randomUUID();
+    private static AttributeModifier REDUCE_SPEED;
 
     public ACSInputHandler(){
         MinecraftForge.EVENT_BUS.register(this);
@@ -80,6 +81,7 @@ public class ACSInputHandler {
         minBackswingTicks = ACSAttributesContainer.get(mc.player).MIN_BACKSWING_TICKS;
         combosAvailable = ACSAttributesContainer.get(mc.player).MAX_COMBO_NUM;
         isHoldingSword = mc.player.getHeldItem(Hand.MAIN_HAND).getItem() instanceof AdvancedSwordItem || mc.player.getHeldItem(Hand.MAIN_HAND).getItem() instanceof SwordItem;
+        REDUCE_SPEED = new AttributeModifier(REDUCE_SPEED_UUID, "ASCReduceSpeed", ACSAttributesContainer.get(mc.player).SPEED_REDUCTION_MODIFIER, AttributeModifier.Operation.ADDITION);
     }
 
     // Main mechanics ==================================================================================================
@@ -98,7 +100,6 @@ public class ACSInputHandler {
                 }
             } else if (event.phase == TickEvent.Phase.END && event.player.world.isRemote) {
                 // while LMB down ======================================================================================
-                AttributeModifier REDUCE_SPEED = new AttributeModifier(REDUCE_SPEED_UUID, "ASCReduceSpeed", ACSAttributesContainer.get(mc.player).SPEED_REDUCE_MODIFIER, AttributeModifier.Operation.ADDITION);
                 if (mc.gameSettings.keyBindAttack.isKeyDown() && (!isAimingAtBlock || isHoldingSword || isBattleMode)) {
                     isMouseLeftKeyPressed = true;
                     isMouseLeftKeyUp = false;

@@ -10,6 +10,7 @@ import net.minecraft.item.TieredItem;
 import net.minecraft.util.Hand;
 import net.minecraft.util.ResourceLocation;
 import net.minecraft.util.math.RayTraceResult;
+import net.minecraft.util.text.ITextComponent;
 import net.minecraft.util.text.TextFormatting;
 import net.minecraft.util.text.TranslationTextComponent;
 import net.minecraftforge.api.distmarker.Dist;
@@ -126,8 +127,13 @@ public class ACSGuiHandler extends AbstractGui {
     @SubscribeEvent
     @OnlyIn(Dist.CLIENT)
     public void onItemTooltipDisplayed(ItemTooltipEvent event){
-        if(event.getItemStack().getItem() instanceof TieredItem && commonCfgObj.getDrawExtendedTooltip()){
+        if(event.getItemStack().getItem() instanceof TieredItem && commonCfgObj.draw_Extended_Tooltip){
             ACSAttributesContainer container = ACSAttributesContainer.get(event.getItemStack().getItem());
+            /*for(ITextComponent i : event.getToolTip()){
+                AdvancedCombatSystem.LOGGER.warn("[ACS] Tooltip: " + i.getString() + " index: " + event.getToolTip().indexOf(i));
+            }*/
+            if(event.getToolTip().size() > 3)
+                event.getToolTip().remove(3);
             event.getToolTip().add(new TranslationTextComponent("items.description.angle", container.ANGLE).appendText(" " + container.ANGLE).applyTextStyle(TextFormatting.DARK_GREEN));
             event.getToolTip().add(new TranslationTextComponent("items.description.range", container.RANGE).appendText(" " + container.RANGE).applyTextStyle(TextFormatting.DARK_GREEN));
             event.getToolTip().add(new TranslationTextComponent("items.description.maxcombos", container.MAX_COMBO_NUM).appendText(" " + container.MAX_COMBO_NUM).applyTextStyle(TextFormatting.DARK_GREEN));

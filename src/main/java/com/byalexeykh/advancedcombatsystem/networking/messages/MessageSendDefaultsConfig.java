@@ -34,7 +34,7 @@ public class MessageSendDefaultsConfig {
                     )
             );
         } catch(IllegalArgumentException | IndexOutOfBoundsException e){
-            LOGGER.error("[ACS] Exception while decoding " + MessageSendDefaultsConfig.class.getName() + ": + e");
+            LOGGER.error("[ACS] Exception while decoding " + MessageSendDefaultsConfig.class.getName() + ": " + e);
             return ReturnValue;
         }
         isMessageValid = true;

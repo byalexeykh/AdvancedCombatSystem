@@ -4,6 +4,7 @@ import com.byalexeykh.advancedcombatsystem.AdvancedCombatSystem;
 import com.byalexeykh.advancedcombatsystem.ToolType;
 import com.byalexeykh.advancedcombatsystem.items.ACSAttributesContainer;
 import com.google.gson.Gson;
+import net.minecraft.item.ItemTier;
 
 import java.io.File;
 import java.io.FileReader;
@@ -23,46 +24,28 @@ public class Config {
         }
     }
 
-    public static void initItemsConfig(Gson gson, String path){
+    public static void initAttributesByIdConfig(Gson gson, String path){
         try{
             FileWriter writer = new FileWriter(path);
             List<ACSAttributesContainer> ForJsons = new ArrayList<>();
 
-            ForJsons.add(new jsonACSAttributesContainer(ToolType.SWORD, 50, 7, 16, 5, 4, -0.03d, 0.4f));
-            ForJsons.add(new jsonACSAttributesContainer(ToolType.AXE, 40, 6, 30, 10, 2, -0.035d, 0.2f));
-            ForJsons.add(new jsonACSAttributesContainer(ToolType.HOE, 70, 5, 20, 8, 2, -0.025d, 0.2f));
-            ForJsons.add(new jsonACSAttributesContainer(ToolType.PICKAXE,30, 5, 20, 7, 2, -0.025d, 0.2f));
-            ForJsons.add(new jsonACSAttributesContainer(ToolType.SHOVEL, 40, 6, 20, 6, 3, -0.025d, 0.2f));
-
-            /*ForJsons.add(new jsonACSAttributesContainer("wooden_sword", ItemTier.WOOD, ToolType.SWORD, 50, 7, 16, 5, 4, -0.03d, 0.4f));
-            ForJsons.add(new jsonACSAttributesContainer("golden_sword", ItemTier.GOLD, ToolType.SWORD, 50, 7, 16, 5, 4, -0.01d, 0.2f));
-            ForJsons.add(new jsonACSAttributesContainer("stone_sword", ItemTier.STONE, ToolType.SWORD, 50, 7, 16, 5, 4, -0.01d, 0.2f));
-            ForJsons.add(new jsonACSAttributesContainer("iron_sword", ItemTier.IRON, ToolType.SWORD, 50, 7, 16, 5, 4, -0.01d, 0.2f));
-            ForJsons.add(new jsonACSAttributesContainer("diamond_sword", ItemTier.DIAMOND, ToolType.SWORD, 50, 7, 16, 5, 4, -0.01d, 0.2f));
-
-            ForJsons.add(new jsonACSAttributesContainer("wooden_axe", ItemTier.WOOD, ToolType.AXE, 40, 6, 30, 10, 2, -0.035d, 0.2f));
-            ForJsons.add(new jsonACSAttributesContainer("golden_axe", ItemTier.GOLD, ToolType.AXE, 40, 6, 30, 10, 2, -0.035d, 0.2f));
-            ForJsons.add(new jsonACSAttributesContainer("stone_axe", ItemTier.STONE, ToolType.AXE, 40, 6, 30, 10, 2, -0.035d, 0.2f));
-            ForJsons.add(new jsonACSAttributesContainer("iron_axe", ItemTier.IRON, ToolType.AXE, 40, 6, 30, 10, 2, -0.035d, 0.2f));
-            ForJsons.add(new jsonACSAttributesContainer("diamond_axe", ItemTier.DIAMOND, ToolType.AXE, 40, 6, 30, 10, 2, -0.035d, 0.2f));
-
-            ForJsons.add(new jsonACSAttributesContainer("wooden_hoe", ItemTier.WOOD, ToolType.HOE, 70, 5, 20, 8, 2, -0.025d, 0.2f));
-            ForJsons.add(new jsonACSAttributesContainer("golden_hoe", ItemTier.GOLD, ToolType.HOE, 70, 5, 20, 8, 2, -0.025d, 0.2f));
-            ForJsons.add(new jsonACSAttributesContainer("stone_hoe", ItemTier.STONE, ToolType.HOE, 70, 5, 20, 8, 2, -0.025d, 0.2f));
-            ForJsons.add(new jsonACSAttributesContainer("iron_hoe", ItemTier.IRON, ToolType.HOE, 70, 5, 20, 8, 2, -0.025d, 0.2f));
-            ForJsons.add(new jsonACSAttributesContainer("diamond_hoe", ItemTier.DIAMOND, ToolType.HOE, 70, 5, 20, 8, 2, -0.025d, 0.2f));
-
-            ForJsons.add(new jsonACSAttributesContainer("wooden_pickaxe", ItemTier.WOOD, ToolType.PICKAXE,30, 5, 20, 7, 2, -0.025d, 0.2f));
-            ForJsons.add(new jsonACSAttributesContainer("golden_pickaxe", ItemTier.GOLD, ToolType.PICKAXE,30, 5, 20, 7, 2, -0.025d, 0.2f));
-            ForJsons.add(new jsonACSAttributesContainer("stone_pickaxe", ItemTier.STONE, ToolType.PICKAXE,30, 5, 20, 7, 2, -0.025d, 0.2f));
-            ForJsons.add(new jsonACSAttributesContainer("iron_pickaxe", ItemTier.IRON, ToolType.PICKAXE,30, 5, 20, 7, 2, -0.025d, 0.2f));
-            ForJsons.add(new jsonACSAttributesContainer("diamond_pickaxe", ItemTier.DIAMOND, ToolType.PICKAXE,30, 5, 20, 7, 2, -0.025d, 0.2f));
-
-            ForJsons.add(new jsonACSAttributesContainer("wooden_shovel", ItemTier.WOOD, ToolType.SHOVEL, 40, 6, 20, 6, 3, -0.025d, 0.2f));
-            ForJsons.add(new jsonACSAttributesContainer("golden_shovel", ItemTier.GOLD, ToolType.SHOVEL, 40, 6, 20, 6, 3, -0.025d, 0.2f));
-            ForJsons.add(new jsonACSAttributesContainer("stone_shovel", ItemTier.STONE, ToolType.SHOVEL, 40, 6, 20, 6, 3, -0.025d, 0.2f));
-            ForJsons.add(new jsonACSAttributesContainer("iron_shovel", ItemTier.IRON, ToolType.SHOVEL, 40, 6, 20, 6, 3, -0.025d, 0.2f));
-            ForJsons.add(new jsonACSAttributesContainer("diamond_shovel", ItemTier.DIAMOND, ToolType.SHOVEL, 40, 6, 20, 6, 3, -0.025d, 0.2f));*/
+            ForJsons.add(
+                    new ItemRegisterContainer(
+                    /*ToolType.SWORD,
+                    ItemTier.WOOD,
+                    1,*/
+                    "example_modid",
+                    "example_name",
+                    new ACSAttributesContainer(
+                            50,
+                            7,
+                            16,
+                            5,
+                            4,
+                            -0.03d,
+                            0.4f)
+                    )
+            );
 
             gson.toJson(ForJsons, writer);
             writer.flush();
@@ -128,15 +111,15 @@ public class Config {
         return gson.fromJson(reader, CommonConfigObj.class);
     }
 
-    public static jsonACSAttributesContainer[] readItemsConfig(Gson gson, String path){
+    public static ItemRegisterContainer[] readAttributesByIdConfig(Gson gson, String path){
         FileReader reader;
         try{
             reader = new FileReader(path);
         }catch (Exception e){
-            AdvancedCombatSystem.LOGGER.error("[ACS] Error while reading items config: " + e);
+            AdvancedCombatSystem.LOGGER.error("[ACS] Error while reading AttributesById config: " + e);
             return null;
         }
-        return gson.fromJson(reader, jsonACSAttributesContainer[].class);
+        return gson.fromJson(reader, ItemRegisterContainer[].class);
     }
 
     public static CommonConfigObj getDefaultCommonConfig(){
