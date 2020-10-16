@@ -71,8 +71,8 @@ Attribute name | Description
 modid | The "modid" to which the item belongs. For example, if it's a vanilla item, then "modid" will be "minecraft", if it's an item from the "Vulcanite" mod, then "vulcanite"
 name | Item name in the registry. For Wooden Sword from Vanilla it will be "wooden_sword"
 ANGLE | The angle is specified in degrees and is calculated as shown in picture 1.
-NEEDED_BACKSWING_TICKS | The required number of ticks is necessary to accumulate energy to make a hit with maximum damage. If the value is "0" (zero), the default value given by the item will be used (For example if you dont want to override default item cooldown).
-MIN_BACKSWING_TICKS | The minimum number of ticks required to hit. If the value of the field "NEEDED_BACKSWING_TICKS" is "0" (zero), then it will be calculated as a percentage of the default item cooldown.
+NEEDED_BACKSWING_TICKS | The required number of ticks that are needed to accumulate energy to make a hit with maximum damage. If the value is "0" (zero), then default item cooldown will be used (For example if you dont want to override default item cooldown).
+MIN_BACKSWING_TICKS | The minimum number of ticks required to hit. If the value "NEEDED_BACKSWING_TICKS" is "0" (zero), then it will be calculated as a percentage of the default item cooldown.
 MAX_COMBO_NUM | The maximum number of combos, after exaggerating which the player will be forced to wait for cooldown.
 SPEED_REDUCTION_MODIFIER | Value corresponding for change of player speed when player accumulates power too long. Positive values speed up the player, negative values slow down. The standard speed value is 1
 COMBO_CHARGING_SPEED_BOUNS | The value that increases the rate of power accumulation if combo stage is passed. Negative values will slow down rate of power accumulation.
